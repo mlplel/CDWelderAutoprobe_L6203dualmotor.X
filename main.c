@@ -83,24 +83,41 @@ int main(void)
        sh1106_ClearPage(page);
     }   
     
-    int i = 0;
     
+    
+    PWM_ModuleEnable();
+    
+    int updown = 0;    
     
     while (1)
-    {        
+    { 
+        
         int16_t encvalue = qei_ReadPos(); 
         
         encvalue = encvalue >> 2;
                 
-        //display_Value(encvalue);
+        display_Value(encvalue);
         
         
         __delay_ms(20);
+        
+        /*
+        
+        if(updown == 0){
+            motor_MoveUp();
+            updown = 1;
+        }
+        
+        if(updown == 1){
+            motor_MoveDown();
+            updown = 0;
+        }
+         */ 
        
         // Add your application code    
-        
+        /*
         uint16_t sws = motor_ReadLimits1();
-        
+       
         if(sws == 1)
             display_Value(1);
         if(sws == 2)
@@ -109,7 +126,7 @@ int main(void)
             display_Value(33);
         if(sws == 0)
             display_Value(0);
-                    
+        */                   
         
     }
     return 1; 

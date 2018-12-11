@@ -49,13 +49,16 @@
 #include "mcc_generated_files/mcc.h"
 
 
- #define FOSC    _XTAL_FREQ
- #define FCY     (FOSC/2)
+ 
+ #define FCY     30170937UL
 
 #include <libpic30.h>
 #include "display.h"
 #include "qei.h"
 #include "motor.h"
+
+int16_t readADC(void);
+void delay100(int);
 
 
 /*
@@ -72,7 +75,7 @@ int main(void)
    
     sh1106_Init();
    
-    __delay_ms(100);
+    __delay_ms(150);
    
     sh1106_On();
    
@@ -81,25 +84,34 @@ int main(void)
     uint8_t page = 0;
     for(;page < 8; page++){
        sh1106_ClearPage(page);
-    }   
+    }    
     
     
-    
-    PWM_ModuleEnable();
-    
-    int updown = 0;    
+    PWM_ModuleEnable();    
     
     while (1)
     { 
         
-        int16_t encvalue = qei_ReadPos(); 
+        int16_t encvalue = 0;
+        encvalue = qei_ReadPos(); 
         
         encvalue = encvalue >> 2;
                 
-        display_Value(encvalue);
+        display_Value(0x0);
+        
+        motor_MoveDown();
+        //__delay_ms(1);
+        while(readADC() > -30);
+        motor_Hold();       
         
         
-        __delay_ms(20);
+        delay100(80);
+        
+        motor_MoveUptoLimit();
+        
+        delay100(30);
+       
+         
         
         /*
         
@@ -112,7 +124,7 @@ int main(void)
             motor_MoveDown();
             updown = 0;
         }
-         */ 
+        */  
        
         // Add your application code    
         /*
@@ -132,7 +144,33 @@ int main(void)
     return 1; 
 }
 
+int16_t readADC(){
+    
+    int16_t adcvalue = 0;
+        
+        ADC1_SamplingStart();
+        __delay_us(1);
+        ADC1_SamplingStop();
+        while(!ADC1_IsConversionComplete())
+        {
+            ADC1_Tasks();   
+        }
+        adcvalue = ADC1_Channel0ConversionResultGet();
+        
+        //adcvalue = adcvalue >> 1;
+        
+        display_Value(adcvalue);
+        return adcvalue;    
+}
 
+void delay100(int count){
+    
+    int i = 0;
+    for(;i < count;i++){
+        readADC();
+        __delay_ms(100);
+    }
+}
  
  
 /**

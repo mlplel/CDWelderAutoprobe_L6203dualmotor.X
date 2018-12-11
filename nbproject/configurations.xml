@@ -18,6 +18,8 @@
         <itemPath>mcc_generated_files/mcc.h</itemPath>
         <itemPath>mcc_generated_files/system.h</itemPath>
         <itemPath>mcc_generated_files/i2c1.h</itemPath>
+        <itemPath>mcc_generated_files/pwm.h</itemPath>
+        <itemPath>mcc_generated_files/adc1.h</itemPath>
       </logicalFolder>
       <itemPath>display.h</itemPath>
       <itemPath>qei.h</itemPath>
@@ -41,6 +43,8 @@
         <itemPath>mcc_generated_files/mcc.c</itemPath>
         <itemPath>mcc_generated_files/pin_manager.c</itemPath>
         <itemPath>mcc_generated_files/i2c1.c</itemPath>
+        <itemPath>mcc_generated_files/pwm.c</itemPath>
+        <itemPath>mcc_generated_files/adc1.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
       <itemPath>display.c</itemPath>
@@ -280,7 +284,7 @@
         <property key="programoptions.testmodeentrymethod" value="VDDFirst"/>
         <property key="programoptions.usehighvoltageonmclr" value="false"/>
         <property key="programoptions.uselvpprogramming" value="false"/>
-        <property key="voltagevalue" value="3.375"/>
+        <property key="voltagevalue" value="3.25"/>
       </ICD3PlatformTool>
       <Simulator>
         <property key="codecoverage.enabled" value="Disable"/>

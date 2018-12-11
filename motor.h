@@ -14,6 +14,12 @@ extern "C" {
 
     
     uint16_t motor_ReadLimits1(void);
+    
+    void motor_MoveUp(void);
+    void motor_MoveDown(void);
+    void motor_MoveUptoLimit(void);
+    void motor_MoveDowntoLimit(void);
+    void motor_Hold(void);
 
 
 

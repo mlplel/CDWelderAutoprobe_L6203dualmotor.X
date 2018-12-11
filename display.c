@@ -231,7 +231,7 @@
          return;
      }
      
-     int exp = 0;
+   
      int dig;
      
      while(val != 0){

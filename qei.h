@@ -21,10 +21,8 @@ extern "C" {
 
     void qei_On(void);
     
-    int16_t qei_ReadPos(void);
-    
-    
-
+    int16_t qei_ReadPos(void);  
+    void qei_WritePos(int16_t);
 
 
 #ifdef	__cplusplus

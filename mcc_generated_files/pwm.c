@@ -86,8 +86,8 @@ void PWM_Initialize (void)
     __builtin_write_PWMSFR(&FCLCON2, 0x03, &PWMKEY);
     //FLTPOL disabled; CLPOL disabled; CLSRC FLT1; CLMOD disabled; FLTMOD Fault input is disabled; FLTSRC FLT1; 
     __builtin_write_PWMSFR(&FCLCON3, 0x03, &PWMKEY);
-    // PDC1 1343; 
-    PDC1 = 0x53F;
+    // PDC1 1280; 
+    PDC1 = 0x500;
     // PDC2 0; 
     PDC2 = 0x00;
     // PDC3 0; 

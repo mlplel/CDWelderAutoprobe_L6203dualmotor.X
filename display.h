@@ -36,6 +36,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "sh1106.h"
+
 
 #include <xc.h> // include processor files - each processor file is guarded.  
 
@@ -83,9 +85,14 @@ void sh1106_On(void);
 
 void sh1106_ClearPage(uint8_t page);
 
+void sh1106_ClearAll(void);
+
 void sh1106_Char(uint8_t col, uint8_t line, int chr);
 
 void display_Value(int16_t val);
+void display_Line3(int16_t val);
+
+
         
     
 #ifdef	__cplusplus

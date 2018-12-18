@@ -2,10 +2,9 @@
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/mcc.h"
 
+#include "dualmotor.h"
 #include "display.h"
-
-
-
+#include <libpic30.h>
 
 
 
@@ -65,33 +64,35 @@
  };
 
  
- I2C1_MESSAGE_STATUS displaystat = I2C1_MESSAGE_PENDING;
+
+ 
+ 
  
  
  void sh1106_Init(void){    
     
-   if(displaystat != I2C1_MESSAGE_FAIL){ 
-    I2C1_MasterWrite(sh1106_init, sizeof(sh1106_init), 0x3c, &displaystat);    
-   }
-   while(displaystat == I2C1_MESSAGE_PENDING){       
-   }     
+    while(i2c_Ready() == I2C_STATUS_FULL);
+    i2c_Write(sh1106_init, sizeof(sh1106_init));      
+
+    __delay_ms(150);
+    sh1106_On();
+    __delay_ms(150);
+    sh1106_ClearAll(); 
+   
+       
+    __delay_ms(150);     
  }
  
  void sh1106_On(void){
-    if(displaystat != I2C1_MESSAGE_FAIL){ 
-        I2C1_MasterWrite(sh1106_on, sizeof(sh1106_on), 0x3c, &displaystat); 
-    } 
-    while(displaystat == I2C1_MESSAGE_PENDING){       
-    }
+     while(i2c_Ready() == I2C_STATUS_FULL);
+     i2c_Write(sh1106_on, sizeof(sh1106_on));    
  }
  
  void sh1106_ClearPage(uint8_t page){
      
-    uint8_t ddata[180];
-    int i = 0;
-     
-    page = page & 0x07; 
-     
+    static uint8_t ddata[180];
+    int i = 0;     
+    page = page & 0x07;      
     ddata[i] = 0x80;
     i++;
     ddata[i] = 0xB0 + page;  //select page 0 - 7
@@ -103,52 +104,29 @@
     ddata[i] = 0x80;
     i++;
     ddata[i] = 0x10;        // column 0
-    i++;
-   
-   for(;i < 136;){
-       ddata[i] = 0xc0;
-       i++;
+    i++;    
+    ddata[i] = 0x40;
+    i++; 
+    //139 
+   for(;i < 139;){
        ddata[i] = 0x00;
        i++;
-   }
-   ddata[i] = 0x40;
-   i++;
-   ddata[i] = 0x00;
-   i++;
+   } 
+    while(i2c_Ready() != I2C_STATUS_IDLE);
+    i2c_Write(ddata, i);
    
-   if(displaystat != I2C1_MESSAGE_FAIL){
-       I2C1_MasterWrite(ddata, i, 0x3c, &displaystat);
-   }
-   while(displaystat == I2C1_MESSAGE_PENDING){       
-   }
-     
-     
-   i = 0;
-   
-    for(;i < 130;){
-       ddata[i] = 0xc0;
-       i++;
-       ddata[i] = 0x00;
-       i++;
-   }  
-          
-   ddata[i] = 0x40;
-   i++;
-   ddata[i] = 0x00;
-   i++;  
-   
-   if(displaystat != I2C1_MESSAGE_FAIL){
-       I2C1_MasterWrite(ddata, i, 0x3c, &displaystat);
-   }  
-   while(displaystat == I2C1_MESSAGE_PENDING){       
-   }  
-   
-     
  }
  
+ void sh1106_ClearAll(void){
+     
+    uint8_t page = 0;
+    for(;page < 8; page++){
+       sh1106_ClearPage(page);
+    }  
+ }
  
  void sh1106_Char(uint8_t col, uint8_t line, int chr) {
-    uint8_t ddata[53];
+    static uint8_t ddata[54];
     int charindx = chr * 20;
     uint8_t page = linepos[line];
     uint8_t collow = colpos[col] & 0x0F;
@@ -201,13 +179,11 @@
     i++;
     charindx++;    
     
-    if(displaystat != I2C1_MESSAGE_FAIL){
-       I2C1_MasterWrite(ddata, i, 0x3c, &displaystat);
-    }  
-    while(displaystat == I2C1_MESSAGE_PENDING){       
-    }      
-     
- } 
+    while(i2c_Ready() != I2C_STATUS_IDLE);
+   
+    i2c_Write(ddata, i);
+   
+ }
  
  void display_Value(int16_t val){
      bool negf;
@@ -222,15 +198,14 @@
      }
      
      if(val == 0){
-         sh1106_Char(1, 2, 0);
-         sh1106_Char(2, 2, 0);
-         sh1106_Char(3, 2, 0);
-         sh1106_Char(4, 2, 0);
-         sh1106_Char(5, 2, 0);
-         sh1106_Char(6, 2, 10);         
+         sh1106_Char(1, 1, 0);
+         sh1106_Char(2, 1, 0);
+         sh1106_Char(3, 1, 0);
+         sh1106_Char(4, 1, 0);
+         sh1106_Char(5, 1, 0);
+         sh1106_Char(6, 1, 10);         
          return;
-     }
-     
+     }     
    
      int dig;
      
@@ -239,21 +214,65 @@
         dig = val % 10;
         if(dig == 0)
             dig = 10;
-        sh1106_Char(pos, 2, dig);
+        sh1106_Char(pos, 1, dig);
          
         val = val / 10;
         pos--;           
          
-     }
-          
+     }         
      
      if(negf == true){
-         sh1106_Char(pos, 2, 11);
+         sh1106_Char(pos, 1, 11);
          pos--;
      }
      
      for(; pos > 0 ; pos--){
-         sh1106_Char(pos, 2, 0);
+         sh1106_Char(pos, 1, 0);
      }
           
+ }
+ 
+ void display_Line3(int16_t val){
+     bool negf;
+     uint8_t pos= 6;
+     
+     if(val < 0){
+         negf = true;
+         val = (~val + 1);
+     }
+     else{
+         negf = false;
+     }
+     
+     if(val == 0){
+         sh1106_Char(1, 4, 0);
+         sh1106_Char(2, 4, 0);
+         sh1106_Char(3, 4, 0);
+         sh1106_Char(4, 4, 0);
+         sh1106_Char(5, 4, 0);
+         sh1106_Char(6, 4, 10);         
+         return;
+     }     
+   
+     int dig;
+     
+     while(val != 0){
+     
+        dig = val % 10;
+        if(dig == 0)
+            dig = 10;
+        sh1106_Char(pos, 4, dig);
+         
+        val = val / 10;
+        pos--;
+     }         
+     
+     if(negf == true){
+         sh1106_Char(pos, 4, 11);
+         pos--;
+     }
+     
+     for(; pos > 0 ; pos--){
+         sh1106_Char(pos, 4, 0);
+     }
  }

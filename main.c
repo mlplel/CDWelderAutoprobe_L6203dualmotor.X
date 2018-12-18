@@ -47,11 +47,8 @@
 */
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/mcc.h"
-
-
  
- #define FCY     30170937UL
-
+#include "dualmotor.h"
 #include <libpic30.h>
 #include "display.h"
 #include "qei.h"
@@ -60,86 +57,52 @@
 int16_t readADC(void);
 void delay100(int);
 
-
 /*
                          Main application
  */
 int main(void)
 {
-    
+    static uint8_t loopcnt = 0;
     // initialize the device
-    SYSTEM_Initialize();
-    
+    SYSTEM_Initialize(); 
+    i2c_Init();
     qei_Init();
-    qei_On();
+    qei_On();   
+    sh1106_Init();    
+    PWM_ModuleEnable();
    
-    sh1106_Init();
-   
-    __delay_ms(150);
-   
-    sh1106_On();
-   
-    __delay_ms(150);
-   
-    uint8_t page = 0;
-    for(;page < 8; page++){
-       sh1106_ClearPage(page);
-    }    
     
     
-    PWM_ModuleEnable();    
     
     while (1)
-    { 
+    {             
+        if(IFS0bits.T2IF)
+        {
+            loopcnt++;       
+            IFS0bits.T2IF = false;
+            loop100us();
+            
+            if(loopcnt == 10){
+                loopcnt = 0;
+                loop1ms();
+            }            
+        } 
+        setStrainValue(readADC());
+                         
+        //display_Value(0x0);
         
-        int16_t encvalue = 0;
-        encvalue = qei_ReadPos(); 
-        
-        encvalue = encvalue >> 2;
-                
-        display_Value(0x0);
-        
-        motor_MoveDown();
+        //motor_MoveDown();
         //__delay_ms(1);
-        while(readADC() > -30);
-        motor_Hold();       
+        //while(readADC() > -330);
+        //motor_Hold();   
+      
+        //delay100(80);
         
+        //motor_MoveUptoLimit();
         
-        delay100(80);
-        
-        motor_MoveUptoLimit();
-        
-        delay100(30);
-       
-         
-        
-        /*
-        
-        if(updown == 0){
-            motor_MoveUp();
-            updown = 1;
-        }
-        
-        if(updown == 1){
-            motor_MoveDown();
-            updown = 0;
-        }
-        */  
-       
-        // Add your application code    
-        /*
-        uint16_t sws = motor_ReadLimits1();
-       
-        if(sws == 1)
-            display_Value(1);
-        if(sws == 2)
-            display_Value(-1);
-        if(sws == 3)
-            display_Value(33);
-        if(sws == 0)
-            display_Value(0);
-        */                   
-        
+        //delay100(30);         
+     
+        // Add your application code                     
     }
     return 1; 
 }
@@ -148,19 +111,20 @@ int16_t readADC(){
     
     int16_t adcvalue = 0;
         
-        ADC1_SamplingStart();
-        __delay_us(1);
-        ADC1_SamplingStop();
-        while(!ADC1_IsConversionComplete())
-        {
-            ADC1_Tasks();   
-        }
-        adcvalue = ADC1_Channel0ConversionResultGet();
+    ADC1_SamplingStart();
+    __delay_us(1);
+    ADC1_SamplingStop();
+    while(!ADC1_IsConversionComplete()){
+    }
+    
+    if(IFS0bits.AD1IF)
+		// clear the ADC interrupt flag
+		IFS0bits.AD1IF = false;   
+    
+    adcvalue = ADC1_Channel0ConversionResultGet(); 
         
-        //adcvalue = adcvalue >> 1;
-        
-        display_Value(adcvalue);
-        return adcvalue;    
+    //display_Value(adcvalue);
+    return adcvalue;    
 }
 
 void delay100(int count){

@@ -12,24 +12,20 @@ void qei_Init(){
     RPINR14bits.QEA1R = 0x36;
     
     QEI1IOCbits.QFDIV = 0x07;
-    QEI1IOCbits.FLTREN = 1;
-    
+    QEI1IOCbits.FLTREN = 1;    
 }
-
-
-
 
 void qei_On(){    
     
      QEI1CONbits.QEIEN = 1;
 }
 
-
-
-
-
 int16_t qei_ReadPos(void){
     
-    return  POS1CNTL;
-    
+    return  POS1CNTL;    
 };
+
+void qei_WritePos(int16_t value){
+    POS1HLD = 0;
+    POS1CNTL = value;
+}

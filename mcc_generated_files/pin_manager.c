@@ -69,7 +69,7 @@ void PIN_MANAGER_Initialize (void)
      ***************************************************************************/
     TRISA = 0x0313;
     TRISB = 0x03F9;
-    TRISC = 0x01F9;
+    TRISC = 0x01F1;
 
     /****************************************************************************
      * Setting the Weak Pull Up and Weak Pull Down SFR(s)

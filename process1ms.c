@@ -45,8 +45,7 @@ void loopDisplay(void){
         display_Value(adcvalue);
     
         display_Line3(encvalue);
-    }
-    
+    }    
 }
 
 ENCSW encswRead(void){

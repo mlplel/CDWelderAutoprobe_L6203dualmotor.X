@@ -4,18 +4,12 @@
 
 #include "dualmotor.h"
 #include "display.h"
-#include <libpic30.h>
 
 
 
- uint8_t sh1106_init[] = {           
-    0x80, 0xA1,     //segment remap left
-    0x80, 0xC8,     //set scan direction
-    0x00, 0x50      //set scan display line
-};
- uint8_t sh1106_on[] = {
-    0x00, 0xAF      // ??turn display on
-};
+
+ 
+ 
  uint8_t sh1106_blankpix[] = {
      0xc0, 00
  };
@@ -64,124 +58,68 @@
  };
 
  
-
- 
- 
- 
- 
- void sh1106_Init(void){    
-    
-    while(i2c_Ready() == I2C_STATUS_FULL);
-    i2c_Write(sh1106_init, sizeof(sh1106_init));      
-
-    __delay_ms(150);
-    sh1106_On();
-    __delay_ms(150);
-    sh1106_ClearAll(); 
-   
-       
-    __delay_ms(150);     
- }
- 
- void sh1106_On(void){
-     while(i2c_Ready() == I2C_STATUS_FULL);
-     i2c_Write(sh1106_on, sizeof(sh1106_on));    
- }
- 
- void sh1106_ClearPage(uint8_t page){
-     
-    static uint8_t ddata[180];
-    int i = 0;     
-    page = page & 0x07;      
-    ddata[i] = 0x80;
-    i++;
-    ddata[i] = 0xB0 + page;  //select page 0 - 7
-    i++;
-    ddata[i] = 0x80;
-    i++;
-    ddata[i] = 0x00;
-    i++;
-    ddata[i] = 0x80;
-    i++;
-    ddata[i] = 0x10;        // column 0
-    i++;    
-    ddata[i] = 0x40;
-    i++; 
-    //139 
-   for(;i < 139;){
-       ddata[i] = 0x00;
-       i++;
-   } 
-    while(i2c_Ready() != I2C_STATUS_IDLE);
-    i2c_Write(ddata, i);
-   
- }
- 
- void sh1106_ClearAll(void){
-     
-    uint8_t page = 0;
-    for(;page < 8; page++){
-       sh1106_ClearPage(page);
-    }  
- }
- 
  void sh1106_Char(uint8_t col, uint8_t line, int chr) {
-    static uint8_t ddata[54];
+    uint8_t *pdata; 
+    if((pdata = (uint8_t *)malloc(54)) == NULL){
+        // error just return atm
+        return;
+    } 
+    
     int charindx = chr * 20;
     uint8_t page = linepos[line];
     uint8_t collow = colpos[col] & 0x0F;
     int8_t colhigh = (colpos[col] >> 4) | 0x10;
     int i = 0;
 
-    ddata[i] = 0x80;
+    *(pdata + i) = 0x80;
     i++;
-    ddata[i] = 0xB0 + page; //select page 0 - 7
+    *(pdata + i) = 0xB0 + page; //select page 0 - 7
     i++;
-    ddata[i] = 0x80;
+    *(pdata + i) = 0x80;
     i++;
-    ddata[i] = collow;
+    *(pdata + i) = collow;
     i++;
-    ddata[i] = 0x80;
+    *(pdata + i) = 0x80;
     i++;
-    ddata[i] = colhigh;
+    *(pdata + i) = colhigh;
     i++;
     int j;
     for (j = 0; j < 10; j++) {
-        ddata[i] = 0xC0;
+        *(pdata + i) = 0xC0;
         i++;
-        ddata[i] = chset2[charindx];
+        *(pdata + i) = chset2[charindx];
         i++;
         charindx++;
     }
 
-    ddata[i] = 0x80;
+    *(pdata + i) = 0x80;
     i++;
-    ddata[i] = 0xB0 + page + 1; //select page 0 - 7
+    *(pdata + i) = 0xB0 + page + 1; //select page 0 - 7
     i++;
-    ddata[i] = 0x80;
+    *(pdata + i) = 0x80;
     i++;
-    ddata[i] = collow;
+    *(pdata + i) = collow;
     i++;
-    ddata[i] = 0x80;
+    *(pdata + i) = 0x80;
     i++;
-    ddata[i] = colhigh;
+    *(pdata + i) = colhigh;
     i++;
     for (j = 0; j < 9; j++) {
-        ddata[i] = 0xC0;
+        *(pdata + i) = 0xC0;
         i++;
-        ddata[i] = chset2[charindx];
+        *(pdata + i) = chset2[charindx];
         i++;
         charindx++;
     }
-    ddata[i] = 0x40;
+    *(pdata + i) = 0x40;
     i++;
-    ddata[i] = chset2[charindx];
+    *(pdata + i) = chset2[charindx];
     i++;
     charindx++;    
     
-    while(i2c_Ready() != I2C_STATUS_IDLE);
+    //while(i2c_Ready() != I2C_STATUS_IDLE);
    
-    i2c_Write(ddata, i);
+    i2c_Write(pdata, i);
    
  }
  
@@ -196,7 +134,6 @@
      else{
          negf = false;
      }
-     
      if(val == 0){
          sh1106_Char(1, 1, 0);
          sh1106_Char(2, 1, 0);
@@ -205,10 +142,8 @@
          sh1106_Char(5, 1, 0);
          sh1106_Char(6, 1, 10);         
          return;
-     }     
-   
+     }  
      int dig;
-     
      while(val != 0){
      
         dig = val % 10;
@@ -219,17 +154,14 @@
         val = val / 10;
         pos--;           
          
-     }         
-     
+     } 
      if(negf == true){
          sh1106_Char(pos, 1, 11);
          pos--;
-     }
-     
+     }     
      for(; pos > 0 ; pos--){
          sh1106_Char(pos, 1, 0);
-     }
-          
+     }          
  }
  
  void display_Line3(int16_t val){

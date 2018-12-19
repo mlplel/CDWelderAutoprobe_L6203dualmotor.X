@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <xc.h>
 
 #ifdef	__cplusplus
@@ -37,6 +38,9 @@ extern "C" {
     I2C_STATUS_MSG i2c_Write(uint8_t *data, uint8_t length);
     I2C_STATUS_MSG i2c_Ready(void);
     
+    
+    void sh1106_Init(void);
+    void sh1106_Clear(void);
     
 
 

@@ -43,7 +43,10 @@ void encswUpdate(void);
 
 
 void setStrainValue(int16_t val);
+void processStrainValue(int16_t val);
 
+void testMotor(void);
+void testValues(int16_t val1, int16_t val2);
 
 
 #ifdef	__cplusplus

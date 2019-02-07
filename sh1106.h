@@ -42,6 +42,10 @@ extern "C" {
     void sh1106_Init(void);
     void sh1106_Clear(void);
     
+    void sh1106_Char(uint8_t col, uint8_t line, int chr);
+    void display_Value(int16_t val);
+    void display_Line3(int16_t val);
+    
 
 
 #ifdef	__cplusplus

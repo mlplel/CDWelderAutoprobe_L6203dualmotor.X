@@ -50,12 +50,14 @@
  
 #include "dualmotor.h"
 #include <libpic30.h>
-#include "display.h"
+#include "sh1106.h"
 #include "qei.h"
 #include "motor.h"
 
+static int16_t pressure1offset = 175;  //175
 int16_t readADC(void);
 void delay100(int);
+int filter(int);
 
 /*
                          Main application
@@ -69,10 +71,11 @@ int main(void)
     qei_Init();
     qei_On();   
     sh1106_Init();    
-    PWM_ModuleEnable();
-   
+    PWM_ModuleEnable();  
     
     
+    PWM_GENERATOR genNum = PWM_GENERATOR_1;
+    PWM_DutyCycleSet(genNum, 0x0500);
     
     while (1)
     {             
@@ -87,20 +90,10 @@ int main(void)
                 loop1ms();
             }            
         } 
-        setStrainValue(readADC());
-                         
-        //display_Value(0x0);
-        
-        //motor_MoveDown();
-        //__delay_ms(1);
-        //while(readADC() > -330);
-        //motor_Hold();   
-      
-        //delay100(80);
-        
-        //motor_MoveUptoLimit();
-        
-        //delay100(30);         
+        //processStrainValue(filter(readADC()));
+        int16_t adctemp = readADC();
+        testValues(filter(adctemp), adctemp);
+                                 
      
         // Add your application code                     
     }
@@ -121,10 +114,22 @@ int16_t readADC(){
 		// clear the ADC interrupt flag
 		IFS0bits.AD1IF = false;   
     
-    adcvalue = ADC1_Channel0ConversionResultGet(); 
+    adcvalue = ADC1_Channel0ConversionResultGet() + pressure1offset; 
         
     //display_Value(adcvalue);
     return adcvalue;    
+}
+
+int filter(int input){
+    static int data[8]= {0, 0, 0, 0, 0, 0, 0, 0};
+    static int index = 0;
+    static int value= 0; 
+    
+    value = value - (data[index] - input);
+    data[index] = input;
+    index = ((index == 7) ? 0: index+1);
+    
+    return (value / 8);
 }
 
 void delay100(int count){

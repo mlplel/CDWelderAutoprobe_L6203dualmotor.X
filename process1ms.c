@@ -9,12 +9,20 @@
 
 #include "dualmotor.h"
 #include "qei.h"
-#include "display.h"
+#include "sh1106.h"
+#include "motor.h"
 
 static ENCSW encsw = SW_INVALID;
 static ENCSWEVENT encswevent = SW_NOEVENT;
 static int16_t encvalue = 0;
 static int16_t adcvalue = 0;
+static int16_t testvalue = 0;
+static int16_t triggervalue = 0;
+
+static uint8_t fdisplay = 1;
+static uint8_t fmpressure = 0;
+
+static int pressuresetvalue = 0;
 
 
 // called ever 1 ms.
@@ -23,28 +31,36 @@ void loop1ms(void){
     
     
     encswUpdate();    
-    encvalue = (qei_ReadPos() >> 2);     
+    encvalue = (qei_ReadPos() >> 2);
+    int pre = encvalue;
+    if(pre < -200)
+        pre = -100;
+    else if(pre > 500)
+        pre = 500;
+    pressuresetvalue = pre; 
  
     ENCSWEVENT event = encswEvent();
     if(event == SW_CLICKED){
-        qei_WritePos(0);
-        encvalue = 0;
+        //qei_WritePos(0);
+        //encvalue = 0;
+        testMotor();
     }
     
     displayloop++;
     if(displayloop == 100){
         displayloop = 0;
         loopDisplay();
-    }
-    
+    }    
 }
 
 void loopDisplay(void){
     
-    if(i2c_Ready() == I2C_STATUS_IDLE){
+    if((i2c_Ready() == I2C_STATUS_IDLE) && fdisplay){
         display_Value(adcvalue);
     
         display_Line3(encvalue);
+        //display_Line3(triggervalue);
+        //display_Line3(testvalue);
     }    
 }
 
@@ -112,4 +128,43 @@ void encswUpdate(void){
 
 void setStrainValue(int16_t val){
     adcvalue = val;
+}
+
+void testMotor(void){
+    
+    static uint8_t mode = 1;
+    if(mode){
+        // move motor down with pressure
+        fmpressure = 1;
+        fdisplay = 0;
+        motor_MoveDown();
+        mode = 0;
+    }
+    else{
+        // move motor up to limit
+        motor_MoveUp();
+        mode = 1;
+    } 
+}
+
+void processStrainValue(int16_t val){
+   adcvalue = val;
+   if(fmpressure){
+       if(val > pressuresetvalue){
+           motor_Hold();
+           fdisplay = 1;
+           triggervalue = val;
+           fmpressure = 0;
+       }
+   }
+}
+
+void testValues(int16_t val1, int16_t val2){
+    
+    testvalue = val2;
+    
+    processStrainValue(val1);  
+    
+    
+    
 }

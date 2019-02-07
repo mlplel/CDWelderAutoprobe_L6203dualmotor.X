@@ -20,8 +20,8 @@
         <itemPath>mcc_generated_files/pwm.h</itemPath>
         <itemPath>mcc_generated_files/adc1.h</itemPath>
         <itemPath>mcc_generated_files/tmr2.h</itemPath>
+        <itemPath>mcc_generated_files/tmr5.h</itemPath>
       </logicalFolder>
-      <itemPath>display.h</itemPath>
       <itemPath>qei.h</itemPath>
       <itemPath>motor.h</itemPath>
       <itemPath>dualmotor.h</itemPath>
@@ -47,9 +47,9 @@
         <itemPath>mcc_generated_files/pwm.c</itemPath>
         <itemPath>mcc_generated_files/adc1.c</itemPath>
         <itemPath>mcc_generated_files/tmr2.c</itemPath>
+        <itemPath>mcc_generated_files/tmr5.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
-      <itemPath>display.c</itemPath>
       <itemPath>qei.c</itemPath>
       <itemPath>motor.c</itemPath>
       <itemPath>process100us.c</itemPath>
@@ -259,6 +259,7 @@
         <property key="UART 1" value="true"/>
         <property key="UART 2" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="true"/>
+        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="false"/>

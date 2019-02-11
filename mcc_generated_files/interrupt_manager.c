@@ -55,4 +55,12 @@ void INTERRUPT_Initialize (void)
     //    MICI: I2C1 Master Events
     //    Priority: 1
         IPC4bits.MI2C1IP = 1;
+        
+     //    ADI: ADC1 Convert Done
+    //    Priority: 1
+        IPC3bits.AD1IP = 1;           
+        
+    //    TI: Timer 5
+    //    Priority: 1
+        IPC7bits.T5IP = 1;    
 }

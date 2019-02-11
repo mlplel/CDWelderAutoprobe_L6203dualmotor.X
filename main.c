@@ -53,11 +53,24 @@
 #include "sh1106.h"
 #include "qei.h"
 #include "motor.h"
+#include "adc.h"
 
 static int16_t pressure1offset = 175;  //175
-int16_t readADC(void);
-void delay100(int);
+
+void initialize(void);
 int filter(int);
+
+void initialize(void) {
+    
+    SYSTEM_Initialize();
+    i2c_Init();
+    qei_Init();
+    qei_On();
+    sh1106_Init();
+    PWM_ModuleEnable();
+    ADC_Init();
+    ADC_On();    
+}
 
 /*
                          Main application
@@ -66,16 +79,10 @@ int main(void)
 {
     static uint8_t loopcnt = 0;
     // initialize the device
-    SYSTEM_Initialize(); 
-    i2c_Init();
-    qei_Init();
-    qei_On();   
-    sh1106_Init();    
-    PWM_ModuleEnable();  
-    
+    initialize();    
     
     PWM_GENERATOR genNum = PWM_GENERATOR_1;
-    PWM_DutyCycleSet(genNum, 0x0500);
+    PWM_DutyCycleSet(genNum, 0x500);
     
     while (1)
     {             
@@ -91,34 +98,16 @@ int main(void)
             }            
         } 
         //processStrainValue(filter(readADC()));
-        int16_t adctemp = readADC();
+        if(ADC_IsCH1Valid()){
+        int16_t adctemp = ADC_GetCH1();
         testValues(filter(adctemp), adctemp);
-                                 
-     
+        
+        }                 
         // Add your application code                     
     }
     return 1; 
 }
 
-int16_t readADC(){
-    
-    int16_t adcvalue = 0;
-        
-    ADC1_SamplingStart();
-    __delay_us(1);
-    ADC1_SamplingStop();
-    while(!ADC1_IsConversionComplete()){
-    }
-    
-    if(IFS0bits.AD1IF)
-		// clear the ADC interrupt flag
-		IFS0bits.AD1IF = false;   
-    
-    adcvalue = ADC1_Channel0ConversionResultGet() + pressure1offset; 
-        
-    //display_Value(adcvalue);
-    return adcvalue;    
-}
 
 int filter(int input){
     static int data[8]= {0, 0, 0, 0, 0, 0, 0, 0};
@@ -131,16 +120,6 @@ int filter(int input){
     
     return (value / 8);
 }
-
-void delay100(int count){
-    
-    int i = 0;
-    for(;i < count;i++){
-        readADC();
-        __delay_ms(100);
-    }
-}
- 
  
 /**
  End of File

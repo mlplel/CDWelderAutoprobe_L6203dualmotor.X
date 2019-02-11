@@ -15,8 +15,7 @@
 #include "stddef.h"
 #include "motor.h"
 
-static uint8_t fmotorupmotion = 0;
-static uint8_t fmotordownmotion = 0;
+static MOTOR_MOTION mm = MOTOR_NOMOTION;
 
 uint16_t motor_ReadLimits1(void){
     
@@ -69,7 +68,7 @@ void motor_MoveDowntoLimit(void){
 void motor_MoveUp(void){
     
     PWM_GENERATOR genNum = PWM_GENERATOR_1;
-    fmotorupmotion = 1;    
+    mm = MOTOR_UPMOTION;    
     PWM_OverrideLowDisable(genNum);    
     IO_RB10_SetHigh();        
 }
@@ -77,7 +76,7 @@ void motor_MoveUp(void){
 void motor_MoveDown(void){
     
     PWM_GENERATOR genNum = PWM_GENERATOR_1;
-    fmotordownmotion = 1;    
+    mm = MOTOR_DOWNMOTION;    
     PWM_OverrideHighDisable(genNum);       
     IO_RB10_SetHigh();    
 }
@@ -86,8 +85,7 @@ void motor_Hold(void){
     PWM_GENERATOR genNum = PWM_GENERATOR_1;    
     PWM_OverrideHighEnable(genNum);
     PWM_OverrideLowEnable(genNum);
-    fmotorupmotion = 0;
-    fmotordownmotion = 0;
+    mm = MOTOR_NOMOTION;
 }
 
 void motor_Off(void){
@@ -96,17 +94,67 @@ void motor_Off(void){
     PWM_OverrideHighEnable(genNum);
     PWM_OverrideLowEnable(genNum);
     IO_RB10_SetLow();   
-    fmotorupmotion = 0;
-    fmotordownmotion = 0;
+    mm = MOTOR_NOMOTION;
 }
 MOTOR_MOTION motor_isMotion(void){
-    if(fmotorupmotion)
-        return MOTOR_UPMOTION;
-    else if(fmotordownmotion)
-        return MOTOR_DOWNMOTION;
-    else
-        return MOTOR_NOMOTION;
+    return mm;
 }
 
+void motor_On(void){
+    PWM_GENERATOR genNum = PWM_GENERATOR_1;    
+    PWM_OverrideHighEnable(genNum);
+    PWM_OverrideLowEnable(genNum);
+    IO_RB10_SetHigh();
+    mm = MOTOR_NOMOTION;    
+}
+
+// motor_Move  +v motor moves down. -v motor moves up
+// should never get a 0;
+void motor_Move(int8_t v){
+    PWM_GENERATOR genNum = PWM_GENERATOR_1;
+    MOTOR_MOTION nmm = MOTOR_DOWNMOTION;
+    int16_t r = v;
+    
+    // extract direction and scale
+    if(v < 0){
+        nmm = MOTOR_UPMOTION;
+        r = ~v;
+        r = r+1;
+    }
+    r = (r*8) + 400;
+
+    if (nmm != mm) {
+        PWM_OverrideHighEnable(genNum);
+        PWM_OverrideLowEnable(genNum);
+        PWM_DutyCycleSet(genNum, r);
+        if (nmm == MOTOR_DOWNMOTION) {
+            mm = MOTOR_DOWNMOTION;
+            PWM_OverrideHighDisable(genNum);
+        } else {
+            mm = MOTOR_UPMOTION;
+            PWM_OverrideLowDisable(genNum);
+        }
+    } else
+        PWM_DutyCycleSet(genNum, r);    
+}
+
+void motor_Run(uint16_t val, MOTOR_MOTION motion){
+    PWM_GENERATOR genNum = PWM_GENERATOR_1;
+
+    if (motion != mm) {
+        PWM_OverrideHighEnable(genNum);
+        PWM_OverrideLowEnable(genNum);
+        PWM_DutyCycleSet(genNum, val);
+        if (motion == MOTOR_DOWNMOTION) {
+            mm = MOTOR_DOWNMOTION;
+            PWM_OverrideHighDisable(genNum);
+        } else {
+            mm = MOTOR_UPMOTION;
+            PWM_OverrideLowDisable(genNum);
+        }
+    } else
+        PWM_DutyCycleSet(genNum, val);
+    
+}
 
 

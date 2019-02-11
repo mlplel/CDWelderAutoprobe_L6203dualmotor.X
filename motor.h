@@ -29,6 +29,10 @@ extern "C" {
     void motor_Hold(void);
     void motor_Off(void);
     MOTOR_MOTION motor_isMotion(void);
+    
+    void motor_On(void);    
+    void motor_Move(int8_t);
+    void motor_Run(uint16_t val, MOTOR_MOTION motion);
 
 
 

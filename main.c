@@ -48,28 +48,38 @@
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/mcc.h"
  
-#include "dualmotor.h"
+#include "process.h"
 #include <libpic30.h>
 #include "sh1106.h"
 #include "qei.h"
 #include "motor.h"
 #include "adc.h"
+#include "servo.h"
+#include "settings.h"
 
-static int16_t pressure1offset = 175;  //175
 
 void initialize(void);
-int filter(int);
 
 void initialize(void) {
-    
+
     SYSTEM_Initialize();
-    i2c_Init();
+    
     qei_Init();
     qei_On();
+    __delay_ms(150);
+    i2c_Init();
     sh1106_Init();
     PWM_ModuleEnable();
+    servo_Init();
     ADC_Init();
-    ADC_On();    
+    ADC_On();
+    settings_init();
+}
+
+//set startup positions and values
+void configure(void){
+    probe1_SetStartPos();
+    
 }
 
 /*
@@ -79,7 +89,9 @@ int main(void)
 {
     static uint8_t loopcnt = 0;
     // initialize the device
-    initialize();    
+    initialize();  
+    // set startup positions and values
+    configure();
     
     PWM_GENERATOR genNum = PWM_GENERATOR_1;
     PWM_DutyCycleSet(genNum, 0x500);
@@ -98,27 +110,18 @@ int main(void)
             }            
         } 
         //processStrainValue(filter(readADC()));
-        if(ADC_IsCH1Valid()){
-        int16_t adctemp = ADC_GetCH1();
-        testValues(filter(adctemp), adctemp);
+        if (ADC_IsCH1Valid()) {
+            int16_t adctemp = ADC_GetCH1();
+
+           
+            test_SetADCValue(adctemp);
+            servo_1Run(adctemp);
+        //testValues(filter(adctemp), adctemp);
         
         }                 
         // Add your application code                     
     }
     return 1; 
-}
-
-
-int filter(int input){
-    static int data[8]= {0, 0, 0, 0, 0, 0, 0, 0};
-    static int index = 0;
-    static int value= 0; 
-    
-    value = value - (data[index] - input);
-    data[index] = input;
-    index = ((index == 7) ? 0: index+1);
-    
-    return (value / 8);
 }
  
 /**

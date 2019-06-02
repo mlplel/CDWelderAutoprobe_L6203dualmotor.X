@@ -7,54 +7,96 @@
 #include "mcc_generated_files/mcc.h"
 #include "mcc_generated_files/system.h"
 
-#include "dualmotor.h"
+#include "process.h"
 #include "qei.h"
 #include "sh1106.h"
 #include "motor.h"
 #include "adc.h"
+#include "servo.h"
+#include "settings.h"
+
+//static int16_t ch0pressure;
+static int16_t ch1pressure;
+
+//static int16_t ch0zeropressure;
+
 
 static ENCSW encsw = SW_INVALID;
 static ENCSWEVENT encswevent = SW_NOEVENT;
 static int16_t encvalue = 0;
 static int16_t adcvalue = 0;
+
+static uint8_t fdisplay = 1;
+
+static PROBE_ACTION probeaction = PROBEUP;
+
 static int16_t testvalue = 0;
 
 
-static uint8_t fdisplay = 1;
-static uint8_t fmpressure = 0;
+// called every 100 us
+void loop100us(void){
+    
+    //IO_RC3_Toggle(); 
+    MOTOR_MOTION mm = motor1_isMotion();
+    if(mm == MOTOR_UPMOTION){
+        if(probe1_GetLimit() == PROBE_UPLIMIT){
+            motor1_Off();
+        }
+    }
+    else if(mm == MOTOR_DOWNMOTION){        
+    if(probe1_GetLimit() == PROBE_DOWNLIMIT)
+       motor1_Off();
+    }
+}
 
-static int16_t pressuresetvalue = 0;
-static int16_t ierror = 0;
-static int16_t perror = 0;
-
-
-// called ever 1 ms.
+// called every 1 ms.
 void loop1ms(void){ 
     static uint8_t displayloop = 0;    
     
     encswUpdate();    
     encvalue = (qei_ReadPos() >> 2);
-    int pre = encvalue;
-    if(pre < -200)
-        pre = -100;
-    else if(pre > 500)
-        pre = 500;
-    pressuresetvalue = pre; 
+    //encvalue *= 10;
+    if(encvalue < 0){
+        encvalue = 0;
+        qei_WritePos(encvalue);
+    }
+    else if(encvalue > 14){
+        encvalue = 14;
+        qei_WritePos(encvalue * 4);
+    }
+    setP1PressureIndex(encvalue);
+    testvalue = getP1Pressure();
+    //testvalue = encvalue;
  
     ENCSWEVENT event = encswEvent();
     if(event == SW_CLICKED){
         //qei_WritePos(0);
         //encvalue = 0;
-        testMotor();
-    }
-    
+        //testMotor();
+        if (probeaction == PROBEUP) {
+            probeaction = PROBEDOWN;
+        } else {
+            probeaction = PROBEUP;
+        }
+        test_Probe1();
+    }  
     
     // display update at 100 ms
     displayloop++;
-    if(displayloop == 100){
+    if(displayloop == 200){
         displayloop = 0;
         loopDisplay();
     }    
+}
+
+
+
+void display_On(void){
+    fdisplay = 1;
+}
+
+void display_Off(void){
+    fdisplay = 0;
 }
 
 void loopDisplay(void){
@@ -62,9 +104,11 @@ void loopDisplay(void){
     if((i2c_Ready() == I2C_STATUS_IDLE) && fdisplay){
         display_Value(adcvalue);
     
-        display_Line3(encvalue);
+        //display_Line3(encvalue);
         //display_Line3(triggervalue);
-        //display_Line3(testvalue);
+        display_Line3(testvalue);
+        //display_Line3(ch1zeropressure);
+        
     }    
 }
 
@@ -128,71 +172,32 @@ void encswUpdate(void){
     }        
 }
 
-void setStrainValue(int16_t val){
-    adcvalue = val;
+void setCH1Value(int16_t p){
+    ch1pressure = p;
 }
 
-void testMotor(void){
-    
-    static uint8_t mode = 1;
-    
-    if(mode){
-        // move motor down with pressure
-        fmpressure = 8;
-        fdisplay = 0;
-        ierror = 0;
-        // motor_MoveDown();
-        motor_On();
-        motor_Move(50);
-        mode = 0;
+
+void test_Probe1(void){
+  
+    if(probeaction == PROBEDOWN){
+        servo_Trigger(SERVO1);
+        //motor1_On();
+        //motor1_Move(encvalue * 10, MOTOR_DOWNMOTION);
     }
     else{
-         IO_RC3_Toggle();
-        // move motor up to limit
-        motor_On();
-        motor_Move(-100);
-        mode = 1;
-    } 
+        servo1_Stop();
+        motor1_On();
+        motor1_Move(1200, MOTOR_UPMOTION);
+    }
 }
 
-void processStrainValue(int16_t val){
-   adcvalue = val;  
-   if(fmpressure == 0) return;
-   
-   int16_t error = pressuresetvalue - val;
-   int16_t derror = error - perror;
-   perror = error;
-   if(derror > 40) derror = 40;
-   if(derror < -40) derror = -40;
-   
-   ierror = ierror + error;
-   if(ierror > 40) ierror = 40;
-   if(ierror < -40) ierror = -40;
-   
-   int8_t kp;
-   
-   if((error < 2) && (error > -2)){
-       fmpressure = fmpressure - 1;
-       if(fmpressure == 0){
-       motor_Hold();
-       fdisplay = 1;
-       }
-   }
-   else {
-        error = (error * 2) + ierror + derror;
-
-        if(error > 127)
-            error = 127;
-        if(error < -128)
-            error = -128;
-        kp = error;
-
-        motor_Move(kp);
-   }   
+void test_SetADCValue(int16_t value){
+    adcvalue = value;
 }
 
-void testValues(int16_t val1, int16_t val2){
-    
-    testvalue = val2;    
-    processStrainValue(val1);     
+void test_SetTestValue(int16_t v){
+    testvalue = v;
 }
+
+
+

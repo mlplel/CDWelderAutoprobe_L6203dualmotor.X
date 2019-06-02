@@ -18,7 +18,6 @@ extern "C" {
 #endif
     
     void qei_Init(void);
-
     void qei_On(void);
     
     int16_t qei_ReadPos(void);  

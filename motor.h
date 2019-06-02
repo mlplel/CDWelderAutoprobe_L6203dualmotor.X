@@ -11,13 +11,18 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-    
-    typedef enum
-    {
+
+    typedef enum {
         MOTOR_NOMOTION,
         MOTOR_UPMOTION,
         MOTOR_DOWNMOTION,
-    }MOTOR_MOTION;
+    } MOTOR_MOTION;
+
+    typedef enum {
+        PROBE_UPLIMIT,
+        PROBE_DOWNLIMIT,
+        PROBE_NOLIMIT
+    }PROBE_LIMIT;
 
     
     uint16_t motor_ReadLimits1(void);
@@ -26,14 +31,16 @@ extern "C" {
     void motor_MoveDown(void);
     void motor_MoveUptoLimit(void);
     void motor_MoveDowntoLimit(void);
-    void motor_Hold(void);
-    void motor_Off(void);
-    MOTOR_MOTION motor_isMotion(void);
+    void motor1_Hold(void);
+    void motor1_Off(void);
+    MOTOR_MOTION motor1_isMotion(void);
     
-    void motor_On(void);    
+    void motor1_On(void);    
     void motor_Move(int8_t);
-    void motor_Run(uint16_t val, MOTOR_MOTION motion);
-
+    void motor1_Move(uint16_t val, MOTOR_MOTION motion);
+    
+    PROBE_LIMIT probe1_GetLimit(void);
+    void probe1_SetStartPos(void);
 
 
 #ifdef	__cplusplus

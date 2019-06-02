@@ -6,8 +6,9 @@
  */
 
 #include "mcc_generated_files/mcc.h"
+#include  <xc.h>
 #include "sh1106.h"
-#include "dualmotor.h"
+#include "process.h"
 
 typedef enum {
     I2C_IDLE,

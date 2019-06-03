@@ -22,6 +22,11 @@
 static MOTOR_MOTION motor1;
 //static MOTOR_MOTION motor2;
 
+
+// testing
+#define IO_RA4_GetValue() 1
+#define IO_RB8_GetValue() 0
+
 PROBE_LIMIT probe1_GetLimit(void){
     
     if(IO_RA4_GetValue() == 0){

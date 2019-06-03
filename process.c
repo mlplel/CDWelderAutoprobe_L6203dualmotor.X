@@ -9,11 +9,13 @@
 
 #include "process.h"
 #include "qei.h"
-#include "sh1106.h"
 #include "motor.h"
 #include "adc.h"
 #include "servo.h"
 #include "settings.h"
+
+
+static uint16_t rxdata[4];
 
 //static int16_t ch0pressure;
 static int16_t ch1pressure;
@@ -25,8 +27,6 @@ static ENCSW encsw = SW_INVALID;
 static ENCSWEVENT encswevent = SW_NOEVENT;
 static int16_t encvalue = 0;
 static int16_t adcvalue = 0;
-
-static uint8_t fdisplay = 1;
 
 static PROBE_ACTION probeaction = PROBEUP;
 
@@ -51,7 +51,27 @@ void loop100us(void){
 
 // called every 1 ms.
 void loop1ms(void){ 
-    static uint8_t displayloop = 0;    
+    static uint16_t count10ms = 0;
+    const uint16_t txdata[4] = {0x1111, 0x4444, 0x7777, 0xAAAA };
+    
+    
+    ENCA_Toggle();
+    
+    count10ms++;
+    
+    if(count10ms == 10){
+        count10ms = 0;
+        // process control panel here.
+        int i = 0;
+        SD2_CS_SetLow();
+        for(;i < 4;i++){
+            SPI2BUF = txdata[i];
+            // rxdata[i] = SPI2BUF;
+        }
+        
+        
+    }
+      
     
     encswUpdate();    
     encvalue = (qei_ReadPos() >> 2);
@@ -81,36 +101,13 @@ void loop1ms(void){
         test_Probe1();
     }  
     
-    // display update at 100 ms
-    displayloop++;
-    if(displayloop == 200){
-        displayloop = 0;
-        loopDisplay();
-    }    
+       
 }
 
 
 
-void display_On(void){
-    fdisplay = 1;
-}
 
-void display_Off(void){
-    fdisplay = 0;
-}
 
-void loopDisplay(void){
-    
-    if((i2c_Ready() == I2C_STATUS_IDLE) && fdisplay){
-        display_Value(adcvalue);
-    
-        //display_Line3(encvalue);
-        //display_Line3(triggervalue);
-        display_Line3(testvalue);
-        //display_Line3(ch1zeropressure);
-        
-    }    
-}
 
 ENCSW encswRead(void){
     return encsw;    
@@ -201,3 +198,24 @@ void test_SetTestValue(int16_t v){
 
 
 
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _SPI2Interrupt(void){
+    
+    IFS2bits.SPI2IF = 0;
+    
+    SD2_CS_SetHigh();
+    int i = 0;
+    for(;i<4;i++){
+        rxdata[i] = SPI2BUF;
+    }
+    
+}
+
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _SPI2ErrInterrupt(void){
+    
+    
+    SPI2STATbits.SPIEN = 0;
+    IFS2bits.SPI2EIF = 0;
+    
+    SPI2STAT = 0x8014;
+    
+}

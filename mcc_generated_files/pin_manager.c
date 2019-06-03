@@ -61,15 +61,15 @@ void PIN_MANAGER_Initialize (void)
      * Setting the Output Latch SFR(s)
      ***************************************************************************/
     LATA = 0x0000;
-    LATB = 0x0000;
+    LATB = 0x0100;
     LATC = 0x0000;
 
     /****************************************************************************
      * Setting the GPIO Direction SFR(s)
      ***************************************************************************/
-    TRISA = 0x0313;
-    TRISB = 0x03F9;
-    TRISC = 0x01F1;
+    TRISA = 0x0303;
+    TRISB = 0x02F9;
+    TRISC = 0x01B9;
 
     /****************************************************************************
      * Setting the Weak Pull Up and Weak Pull Down SFR(s)
@@ -78,7 +78,7 @@ void PIN_MANAGER_Initialize (void)
     CNPDB = 0x0000;
     CNPDC = 0x0000;
     CNPUA = 0x0000;
-    CNPUB = 0x0000;
+    CNPUB = 0x0100;
     CNPUC = 0x0000;
 
     /****************************************************************************
@@ -92,10 +92,17 @@ void PIN_MANAGER_Initialize (void)
      * Setting the Analog/Digital Configuration SFR(s)
      ***************************************************************************/
     ANSELA = 0x0003;
-    ANSELB = 0x000F;
-    ANSELC = 0x0003;
+    ANSELB = 0x0000;
+    ANSELC = 0x0000;
 
 
+    /****************************************************************************
+     * Set the PPS
+     ***************************************************************************/
+    RPOR0bits.RP20R = 0x0008;       // RA4->SPI2:SDO2
+    RPINR22bits.SDI2R = 0x0019;     // RA9->SPI2:SDI2
+    RPOR2bits.RP39R = 0x0009;       // RB7->SPI2:CLOCK
+    RPINR22bits.SCK2R = 0x0027;     // RB7->SPI2:CLOCK
 
 }
 

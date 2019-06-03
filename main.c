@@ -50,7 +50,6 @@
  
 #include "process.h"
 #include <libpic30.h>
-#include "sh1106.h"
 #include "qei.h"
 #include "motor.h"
 #include "adc.h"
@@ -64,11 +63,7 @@ void initialize(void) {
 
     SYSTEM_Initialize();
     
-    qei_Init();
-    qei_On();
-    __delay_ms(150);
-    i2c_Init();
-    sh1106_Init();
+    
     PWM_ModuleEnable();
     servo_Init();
     ADC_Init();
@@ -78,7 +73,7 @@ void initialize(void) {
 
 //set startup positions and values
 void configure(void){
-    probe1_SetStartPos();
+    //probe1_SetStartPos();
     
 }
 

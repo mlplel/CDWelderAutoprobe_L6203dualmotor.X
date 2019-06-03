@@ -63,7 +63,7 @@ void servo1_Stop(void){
 void servo_1Run(int16_t p){
     if(servo1trigger == 0)
         return;
-     IO_RC3_Toggle();
+     
 
     int32_t error = pressure1setvalue - p;
          // test screw hystera here

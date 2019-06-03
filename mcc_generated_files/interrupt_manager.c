@@ -52,13 +52,15 @@
 */
 void INTERRUPT_Initialize (void)
 {
-    //    MICI: I2C1 Master Events
-    //    Priority: 1
-        IPC4bits.MI2C1IP = 1;
-        
+            
      //    ADI: ADC1 Convert Done
     //    Priority: 1
-        IPC3bits.AD1IP = 1;           
+        IPC3bits.AD1IP = 1; 
+        
+   //    SPII: SPI2 transfer done
+    //    Priority: 1
+        IPC8bits.SPI2IP = 4;
+        IPC8bits.SPI2EIP = 5;
         
     //    TI: Timer 5
     //    Priority: 1

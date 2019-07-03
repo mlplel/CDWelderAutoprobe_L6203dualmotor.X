@@ -19,19 +19,27 @@
 #include "process.h"
 #include "settings.h"
 
-static MOTOR_MOTION motor1;
+static MOTOR_MOTION motor2 = MOTOR_NOMOTION;
+static MOTOR_MOTION motor1 = MOTOR_NOMOTION;
 //static MOTOR_MOTION motor2;
 
 
-// testing
-#define IO_RA4_GetValue() 1
-#define IO_RB8_GetValue() 0
 
-PROBE_LIMIT probe1_GetLimit(void){
+PROBE_LIMIT get_probe2limit(void){
     
-    if(IO_RA4_GetValue() == 0){
+    if(LIM2_GetValue() == 0){
         return PROBE_UPLIMIT;
-    }else if(IO_RB8_GetValue() == 0){
+    }else if(LIM3_GetValue() == 0){
+        return PROBE_DOWNLIMIT;
+    }else return PROBE_NOLIMIT;
+    
+}
+
+PROBE_LIMIT get_probe1limit(void){
+    
+    if(LIM1_GetValue() == 0){
+        return PROBE_UPLIMIT;
+    }else if(LIM4_GetValue() == 0){
         return PROBE_DOWNLIMIT;
     }else return PROBE_NOLIMIT;
 }
@@ -40,10 +48,10 @@ uint16_t motor_ReadLimits1(void){
     
     uint16_t sws = 0;    
     
-    if(IO_RA4_GetValue() == 0)
+    if(LIM1_GetValue() == 0)
         sws = sws | 0x01;
             
-    if(IO_RB8_GetValue() == 0)
+    if(LIM4_GetValue() == 0)
         sws = sws | 0x02;
     return sws;    
 }
@@ -55,7 +63,7 @@ void motor_MoveUptoLimit(void){
     
     IO_RB10_SetHigh();
     
-    while(IO_RA4_GetValue() == 1);
+    while(LIM1_GetValue() == 1);
     
     PWM_OverrideLowEnable(genNum);
     
@@ -72,7 +80,7 @@ void motor_MoveDowntoLimit(void){
     
     IO_RB10_SetHigh();
     
-    while(IO_RB8_GetValue() == 1);
+    while(LIM4_GetValue() == 1);
     
     PWM_OverrideHighEnable(genNum);
     
@@ -104,7 +112,14 @@ void motor1_Hold(void){
     motor1 = MOTOR_NOMOTION;
 }
 
-void motor1_Off(void){
+void motor2_Hold(void){
+    PWM_GENERATOR genNum = PWM_GENERATOR_2;    
+    PWM_OverrideHighEnable(genNum);
+    PWM_OverrideLowEnable(genNum);
+    motor2 = MOTOR_NOMOTION;
+}
+
+void motor1_off(void){
     PWM_GENERATOR genNum = PWM_GENERATOR_1;
     // disable motor drive
     PWM_OverrideHighEnable(genNum);
@@ -113,11 +128,24 @@ void motor1_Off(void){
     motor1 = MOTOR_NOMOTION;
 }
 
+void motor2_off(void){
+    PWM_GENERATOR genNum = PWM_GENERATOR_2;
+    // disable motor drive
+    PWM_OverrideHighEnable(genNum);
+    PWM_OverrideLowEnable(genNum);
+    IO_RB11_SetLow();   
+    motor2 = MOTOR_NOMOTION;
+}
+
 MOTOR_MOTION motor1_isMotion(void){
     return motor1;
 }
 
-void motor1_On(void){
+MOTOR_MOTION motor2_isMotion(void){
+    return motor2;
+}
+
+void motor1_on(void){
     PWM_GENERATOR genNum = PWM_GENERATOR_1;    
     PWM_OverrideHighEnable(genNum);
     PWM_OverrideLowEnable(genNum);
@@ -125,6 +153,14 @@ void motor1_On(void){
     motor1 = MOTOR_NOMOTION;    
 }
 
+
+void motor2_on(void){
+    PWM_GENERATOR genNum = PWM_GENERATOR_2;    
+    PWM_OverrideHighEnable(genNum);
+    PWM_OverrideLowEnable(genNum);
+    IO_RB11_SetHigh();
+    motor2 = MOTOR_NOMOTION;    
+}
 // motor_Move  +v motor moves down. -v motor moves up
 // should never get a 0;
 void motor_Move(int8_t v){
@@ -174,22 +210,61 @@ void motor1_Move(uint16_t val, MOTOR_MOTION motion){
     
 }
 
+void motor2_Move(uint16_t val, MOTOR_MOTION motion){
+    PWM_GENERATOR genNum = PWM_GENERATOR_2;
+
+    if (motion != motor2) {
+        PWM_OverrideHighEnable(genNum);
+        PWM_OverrideLowEnable(genNum);
+        PWM_DutyCycleSet(genNum, val);
+        if (motion == MOTOR_DOWNMOTION) {
+            motor2 = MOTOR_DOWNMOTION;
+            PWM_OverrideHighDisable(genNum);
+        } else {
+            motor2 = MOTOR_UPMOTION;
+            PWM_OverrideLowDisable(genNum);
+        }
+    } else
+        PWM_DutyCycleSet(genNum, val);
+    
+}
+
 // set probe position and set zero pressure value
 void probe1_SetStartPos(void){
-    
-    if (probe1_GetLimit() != PROBE_UPLIMIT) {
-        motor1_On();
+    motor1_on();
+    if (get_probe1limit() != PROBE_UPLIMIT) {
         motor1_Move(800, MOTOR_UPMOTION);
     }
-    while (probe1_GetLimit() != PROBE_UPLIMIT);
-    motor1_On();
-    motor1_Move(600, MOTOR_DOWNMOTION);
-    while (probe1_GetLimit() == PROBE_UPLIMIT);
+    while (get_probe1limit() != PROBE_UPLIMIT);
+    motor1_Hold();
+    __delay_ms(10);
+    motor1_Move(800, MOTOR_DOWNMOTION);
+    while (get_probe1limit() == PROBE_UPLIMIT);
     motor1_Hold();
 
     __delay_ms(100);
     setP1ZeroPressure();   
-    motor1_Off();
+    motor1_off();
 }
+
+void probe2_SetStartPos(void){
+    motor2_on();
+    if (get_probe2limit() != PROBE_UPLIMIT) {
+        motor2_Move(800, MOTOR_UPMOTION);
+    }
+    while (get_probe2limit() != PROBE_UPLIMIT);
+    motor2_Hold();
+    __delay_ms(10);
+    motor2_Move(800, MOTOR_DOWNMOTION);
+    while (get_probe2limit() == PROBE_UPLIMIT);
+    motor2_Hold();
+
+    __delay_ms(100);
+    setP2ZeroPressure();   
+    motor2_off();
+}
+
+
+
 
 

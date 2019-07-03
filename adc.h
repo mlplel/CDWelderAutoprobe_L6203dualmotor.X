@@ -27,7 +27,9 @@ void ADC_Init(void);
 void ADC_On(void);
 void ADC_Off(void);
 
+bool ADC_IsCH0Valid(void);
 bool ADC_IsCH1Valid(void);
+int16_t ADC_GetCH0(void);
 int16_t ADC_GetCH1(void);
 
 int16_t LPFilterCH0(int16_t input);

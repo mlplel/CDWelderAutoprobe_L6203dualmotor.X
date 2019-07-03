@@ -45,7 +45,7 @@ void servo_Trigger(SERVO_MODE m){
         pid1.Ki = p.ki;
          
                    
-        motor1_On();
+        motor1_on();
         motor1_Move(200, MOTOR_DOWNMOTION);
         //display_
     }

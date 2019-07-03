@@ -68,13 +68,21 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _AD1Interrupt(void){
     ch1.validf = true;    
 }
 
-bool ADC_IsCH1Valid(void){
-    
-    return ch1.validf;       
+
+
+bool ADC_IsCH0Valid(void){
+    return ch0.validf;
 }
 
-int16_t ADC_GetCH1(void){
-    
+bool ADC_IsCH1Valid(void){    
+    return ch1.validf;      
+}
+
+int16_t ADC_GetCH0(void){
+    ch0.validf = false;
+    return ch0.value;
+}
+int16_t ADC_GetCH1(void){    
     ch1.validf = false;
     return ch1.value;    
 }

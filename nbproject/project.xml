@@ -4,6 +4,7 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>L6203dualmotor</name>
+            <name>L6203dualmotor</name>
             <creation-uuid>9fb01e33-d498-41e9-a509-26c158cbeb8d</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>

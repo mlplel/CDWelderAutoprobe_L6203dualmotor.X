@@ -32,15 +32,23 @@ extern "C" {
     void motor_MoveUptoLimit(void);
     void motor_MoveDowntoLimit(void);
     void motor1_Hold(void);
-    void motor1_Off(void);
+    void motor2_Hold(void);
+    void motor1_off(void);
+    void motor2_off(void);
     MOTOR_MOTION motor1_isMotion(void);
+    MOTOR_MOTION motor2_isMotion(void);
     
-    void motor1_On(void);    
+    void motor1_on(void); 
+    void motor2_on(void);
     void motor_Move(int8_t);
     void motor1_Move(uint16_t val, MOTOR_MOTION motion);
+    void motor2_Move(uint16_t val, MOTOR_MOTION motion);
     
-    PROBE_LIMIT probe1_GetLimit(void);
+    PROBE_LIMIT get_probe2limit(void);
+    PROBE_LIMIT get_probe1limit(void);
     void probe1_SetStartPos(void);
+    void probe2_SetStartPos(void);
+    
 
 
 #ifdef	__cplusplus

@@ -55,15 +55,18 @@
 #include "adc.h"
 #include "servo.h"
 #include "settings.h"
+#include "comm.h"
+#include "messages.h"
 
 
 void initialize(void);
+void configure(void);
+void powerup(void);
+int16_t syncControl(void);
 
 void initialize(void) {
 
-    SYSTEM_Initialize();
-    
-    
+    SYSTEM_Initialize();    
     PWM_ModuleEnable();
     servo_Init();
     ADC_Init();
@@ -73,7 +76,8 @@ void initialize(void) {
 
 //set startup positions and values
 void configure(void){
-    //probe1_SetStartPos();
+    probe1_SetStartPos();
+    probe2_SetStartPos();   
     
 }
 
@@ -84,12 +88,11 @@ int main(void)
 {
     static uint8_t loopcnt = 0;
     // initialize the device
-    initialize();  
+    initialize();
+
     // set startup positions and values
     configure();
-    
-    PWM_GENERATOR genNum = PWM_GENERATOR_1;
-    PWM_DutyCycleSet(genNum, 0x500);
+ 
     
     while (1)
     {             
@@ -105,15 +108,19 @@ int main(void)
             }            
         } 
         //processStrainValue(filter(readADC()));
-        if (ADC_IsCH1Valid()) {
+         if(ADC_IsCH0Valid()){
+             int16_t adctemp = ADC_GetCH0();
+            
+             set_ADCValueCH0(adctemp);             
+        }
+        if(ADC_IsCH1Valid()) {
             int16_t adctemp = ADC_GetCH1();
-
            
-            test_SetADCValue(adctemp);
+            //test_SetADCValue(adctemp);
+            set_ADCValueCH1(adctemp);
             servo_1Run(adctemp);
-        //testValues(filter(adctemp), adctemp);
-        
-        }                 
+        //testValues(filter(adctemp), adctemp);        
+        }
         // Add your application code                     
     }
     return 1; 

@@ -39,12 +39,25 @@ extern "C" {
         PROBEUP,
         PROBEDOWN
     } PROBE_ACTION;
+
+    typedef enum {
+        FULLUP,
+        FULLDOWN,
+        PARTUP,
+        PARTDOWN
+    } SWSTATUS;
+
+    typedef enum {
+        MODE_POWERON,
+        MODE_RUN,
+        MODE_TEST,
+    } RUNMODE;
     
 
     
 void loop1ms(void);
 void loop100us(void);  
-void loopDisplay(void);
+void commloop(void);
 
 ENCSW encswRead(void);
 ENCSWEVENT encswEvent(void);
@@ -60,6 +73,12 @@ void testMotor(void);
 void test_SetADCValue(int16_t value);
 void test_Probe1(void);
 void test_SetTestValue(int16_t v);
+
+void set_ADCValueCH0(int16_t value);
+void set_ADCValueCH1(int16_t value);
+
+
+SWSTATUS sw_debounce(uint16_t sw, uint16_t* swstate);
 
 
 #ifdef	__cplusplus

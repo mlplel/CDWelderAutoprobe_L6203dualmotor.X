@@ -13,9 +13,11 @@
 #include "adc.h"
 #include "servo.h"
 #include "settings.h"
+#include "comm.h"
+#include "messages.h"
 
 
-static uint16_t rxdata[4];
+static RUNMODE runmode = MODE_POWERON;
 
 //static int16_t ch0pressure;
 static int16_t ch1pressure;
@@ -25,12 +27,17 @@ static int16_t ch1pressure;
 
 static ENCSW encsw = SW_INVALID;
 static ENCSWEVENT encswevent = SW_NOEVENT;
-static int16_t encvalue = 0;
 static int16_t adcvalue = 0;
-
 static PROBE_ACTION probeaction = PROBEUP;
 
 static int16_t testvalue = 0;
+
+static int16_t adcvaluech0 = 0;
+static int16_t adcvaluech1 = 0;
+
+static uint16_t actionswitch = 0xFFFF;
+static uint16_t procstatus = 0x0000;
+
 
 
 // called every 100 us
@@ -38,54 +45,55 @@ void loop100us(void){
     
     //IO_RC3_Toggle(); 
     MOTOR_MOTION mm = motor1_isMotion();
-    if(mm == MOTOR_UPMOTION){
-        if(probe1_GetLimit() == PROBE_UPLIMIT){
-            motor1_Off();
+    if (mm == MOTOR_UPMOTION) {
+        if (get_probe1limit() == PROBE_UPLIMIT) {
+            motor1_off();
         }
-    }
-    else if(mm == MOTOR_DOWNMOTION){        
-    if(probe1_GetLimit() == PROBE_DOWNLIMIT)
-       motor1_Off();
-    }
+        if (get_probe2limit() == PROBE_UPLIMIT) {
+            motor2_off();
+        }
+    } else if (mm == MOTOR_DOWNMOTION) {
+        if (get_probe1limit() == PROBE_DOWNLIMIT) {
+            motor1_off();
+        }
+        if (get_probe2limit() == PROBE_DOWNLIMIT) {
+            motor2_off();
+        }
+    }    
 }
 
 // called every 1 ms.
 void loop1ms(void){ 
-    static uint16_t count10ms = 0;
-    const uint16_t txdata[4] = {0x1111, 0x4444, 0x7777, 0xAAAA };
+    static uint16_t count10ms = 0;   
     
     
-    ENCA_Toggle();
-    
-    count10ms++;
-    
+    count10ms++;    
     if(count10ms == 10){
         count10ms = 0;
         // process control panel here.
-        int i = 0;
-        SD2_CS_SetLow();
-        for(;i < 4;i++){
-            SPI2BUF = txdata[i];
-            // rxdata[i] = SPI2BUF;
-        }
-        
-        
-    }
-      
+        commloop();             
+    }  
     
-    encswUpdate();    
-    encvalue = (qei_ReadPos() >> 2);
-    //encvalue *= 10;
-    if(encvalue < 0){
-        encvalue = 0;
-        qei_WritePos(encvalue);
+    
+    uint16_t temp = ACTION_GetValue();
+    SWSTATUS swstat = sw_debounce(temp, &actionswitch);
+    if(swstat == FULLDOWN){
+        // action trigger.
+        
+        procstatus = procstatus | 0x0010;
+     
+        
+        
+    }else if(swstat == FULLUP){
+        
+        procstatus = procstatus & 0xFFEF;
+     
     }
-    else if(encvalue > 14){
-        encvalue = 14;
-        qei_WritePos(encvalue * 4);
-    }
-    setP1PressureIndex(encvalue);
-    testvalue = getP1Pressure();
+    
+    
+    
+    //setP1PressureIndex(3);
+    //testvalue = getP1Pressure();
     //testvalue = encvalue;
  
     ENCSWEVENT event = encswEvent();
@@ -99,13 +107,43 @@ void loop1ms(void){
             probeaction = PROBEUP;
         }
         test_Probe1();
-    }  
-    
-       
+    }        
 }
 
-
-
+void commloop(void){
+   
+    MAINMSG msg;
+    msg.command = MSG_testmode1.command;
+    msg.data1 = adcvaluech0;
+    //msg.data1 = get_p1zeropressure();
+    msg.data2 = adcvaluech1;
+    //msg.data2 = get_p2zeropressure();
+    msg.data3 = procstatus;
+    send_msg(msg);
+    
+    if(is_newmsg()){
+        msg = get_msg();
+        if(msg.validf){
+            if(msg.command == RPY_status.command){
+                CTLCMD cc = msg.data1;
+                switch(cc){
+                    
+                    case TESTPROBE1:
+                        encswevent = SW_CLICKED;
+                        if((msg.data3 > 0) & (msg.data3 < 16)){
+                            //only update if valid
+                            set_p1pressureindex(msg.data3);
+                        }
+                        break;
+                 
+                    
+                    default:
+                        break;
+                }                
+            }     
+        }        
+    }    
+}
 
 
 
@@ -124,7 +162,7 @@ void encswUpdate(void){
     
     // debounce switch
     encswreg = encswreg << 1;
-    if(IO_RC8_GetValue()){        
+    if(LIM1_GetValue()){        
         encswreg = encswreg | 1;        
     }
     else{
@@ -183,9 +221,16 @@ void test_Probe1(void){
     }
     else{
         servo1_Stop();
-        motor1_On();
+        motor1_on();
         motor1_Move(1200, MOTOR_UPMOTION);
     }
+}
+
+void set_ADCValueCH0(int16_t value){
+    adcvaluech0 = value;
+}
+void set_ADCValueCH1(int16_t value){
+    adcvaluech1 = value;
 }
 
 void test_SetADCValue(int16_t value){
@@ -196,26 +241,26 @@ void test_SetTestValue(int16_t v){
     testvalue = v;
 }
 
-
-
-void __attribute__ ( ( interrupt, no_auto_psv ) ) _SPI2Interrupt(void){
-    
-    IFS2bits.SPI2IF = 0;
-    
-    SD2_CS_SetHigh();
-    int i = 0;
-    for(;i<4;i++){
-        rxdata[i] = SPI2BUF;
+// sw current state of switch, swstate 16bits of past switch state
+SWSTATUS sw_debounce(uint16_t sw, uint16_t* swstate){
+    SWSTATUS sws;
+    *swstate = (*swstate) << 1;
+    if(sw != 0){
+        (*swstate)++;
     }
+    if(*swstate == 0xFFFF){
+        sws = FULLUP;
+        return sws;
+    }else if(*swstate == 0x0000){
+        sws = FULLDOWN;
+        return sws;
+    }else if((*swstate & 0x0001) == 0x0001){
+        sws = PARTUP;
+        return sws;
+    }else 
+        sws = PARTDOWN;
+        return sws;    
     
 }
 
-void __attribute__ ( ( interrupt, no_auto_psv ) ) _SPI2ErrInterrupt(void){
-    
-    
-    SPI2STATbits.SPIEN = 0;
-    IFS2bits.SPI2EIF = 0;
-    
-    SPI2STAT = 0x8014;
-    
-}
+

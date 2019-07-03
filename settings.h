@@ -20,11 +20,16 @@ extern "C" {
     }PIDVALUE;
 
     void settings_init(void);    
-    void setP1PressureIndex(uint16_t pres);
+    void set_p1pressureindex(uint16_t i);
+    void set_p2pressureindex(uint16_t i);
     int16_t getP1Pressure(void);
+    int16_t getP2Pressure(void);
     PIDVALUE getP1Pid(void);
     
     void setP1ZeroPressure(void);
+    int16_t get_p1zeropressure(void);
+    void setP2ZeroPressure(void);
+    int16_t get_p2zeropressure();
 
 #ifdef	__cplusplus
 }

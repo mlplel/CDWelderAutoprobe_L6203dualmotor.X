@@ -51,13 +51,25 @@ extern "C" {
         MODE_POWERON,
         MODE_RUN,
         MODE_TEST,
+        MODE_COMMERROR,
+        MODE_NONE,
     } RUNMODE;
+
+    typedef enum {
+        NOEVENT,
+        CLICKED,
+        PRESSED,
+    } SWEVENT;
     
+    typedef enum {
+        START,
+        INIT,
+        FINISH,
+    } POWERONSTATE;    
 
     
 void loop1ms(void);
 void loop100us(void);  
-void commloop(void);
 
 ENCSW encswRead(void);
 ENCSWEVENT encswEvent(void);
@@ -70,15 +82,20 @@ void display_Off(void);
 void setCH1Value(int16_t p);
 
 void testMotor(void);
-void test_SetADCValue(int16_t value);
 void test_Probe1(void);
 void test_SetTestValue(int16_t v);
 
 void set_ADCValueCH0(int16_t value);
 void set_ADCValueCH1(int16_t value);
 
-
 SWSTATUS sw_debounce(uint16_t sw, uint16_t* swstate);
+
+void proc_actionswitch(void);
+SWEVENT get_actionswitch(void);
+
+void run_poweron(void);
+void run_operate(void);
+void run_commerror(void);
 
 
 #ifdef	__cplusplus

@@ -21,12 +21,15 @@ extern "C" {
         RPO_status,
         RPO_none,
         RPO_command,
+        RPO_probepressure,
         CMD_poweron = 0xA301,
         CMD_init,
         CMD_cmdok,
         CMD_status,
         CMD_sync,
         CMD_testmode1 = 0xB101,
+        RPO_error = 0xFFFF,
+        CMD_error = 0xFFFF,
     } CMD;
 
     typedef struct {
@@ -55,11 +58,14 @@ extern "C" {
     extern const MAINMSG MSG_cmdok;
     extern const MAINMSG MSG_testmode1;
     extern const MAINMSG MSG_sync;
+    extern const MAINMSG msg_error;
 
     extern const MAINMSG RPY_init;
     extern const MAINMSG RPY_status;
     extern const MAINMSG RPY_command;
-    extern const MAINMSG RPY_none;    
+    extern const MAINMSG RPY_none; 
+    extern const MAINMSG PRY_probepressure;
+    extern const MAINMSG RPY_error;
 
 
 #ifdef	__cplusplus

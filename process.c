@@ -18,6 +18,7 @@
 
 
 static RUNMODE runmode = MODE_POWERON;
+static RUNMODE prevmode = MODE_NONE;
 
 //static int16_t ch0pressure;
 static int16_t ch1pressure;
@@ -27,7 +28,6 @@ static int16_t ch1pressure;
 
 static ENCSW encsw = SW_INVALID;
 static ENCSWEVENT encswevent = SW_NOEVENT;
-static int16_t adcvalue = 0;
 static PROBE_ACTION probeaction = PROBEUP;
 
 static int16_t testvalue = 0;
@@ -36,6 +36,7 @@ static int16_t adcvaluech0 = 0;
 static int16_t adcvaluech1 = 0;
 
 static uint16_t actionswitch = 0xFFFF;
+static SWEVENT actionswitchevent = NOEVENT;
 static uint16_t procstatus = 0x0000;
 
 
@@ -64,40 +65,35 @@ void loop100us(void){
 
 // called every 1 ms.
 void loop1ms(void){ 
-    static uint16_t count10ms = 0;   
     
-    
-    count10ms++;    
-    if(count10ms == 10){
-        count10ms = 0;
-        // process control panel here.
-        commloop();             
-    }  
-    
-    
-    uint16_t temp = ACTION_GetValue();
-    SWSTATUS swstat = sw_debounce(temp, &actionswitch);
-    if(swstat == FULLDOWN){
-        // action trigger.
+    // main run mode selected here
+    switch(runmode){
         
-        procstatus = procstatus | 0x0010;
-     
-        
-        
-    }else if(swstat == FULLUP){
-        
-        procstatus = procstatus & 0xFFEF;
-     
+        case MODE_POWERON:
+            run_poweron();
+            break;
+            
+        case MODE_RUN:
+            run_operate();
+            break;
+            
+        case MODE_COMMERROR:
+            run_commerror();
+            break;
+            
+        default:
+            break;
     }
-    
+  
+    proc_actionswitch();
     
     
     //setP1PressureIndex(3);
     //testvalue = getP1Pressure();
     //testvalue = encvalue;
  
-    ENCSWEVENT event = encswEvent();
-    if(event == SW_CLICKED){
+    SWEVENT swe = get_actionswitch();
+    if(swe == PRESSED){
         //qei_WritePos(0);
         //encvalue = 0;
         //testMotor();
@@ -110,41 +106,24 @@ void loop1ms(void){
     }        
 }
 
-void commloop(void){
-   
-    MAINMSG msg;
-    msg.command = MSG_testmode1.command;
-    msg.data1 = adcvaluech0;
-    //msg.data1 = get_p1zeropressure();
-    msg.data2 = adcvaluech1;
-    //msg.data2 = get_p2zeropressure();
-    msg.data3 = procstatus;
-    send_msg(msg);
+void proc_actionswitch(){
     
-    if(is_newmsg()){
-        msg = get_msg();
-        if(msg.validf){
-            if(msg.command == RPY_status.command){
-                CTLCMD cc = msg.data1;
-                switch(cc){
-                    
-                    case TESTPROBE1:
-                        encswevent = SW_CLICKED;
-                        if((msg.data3 > 0) & (msg.data3 < 16)){
-                            //only update if valid
-                            set_p1pressureindex(msg.data3);
-                        }
-                        break;
-                 
-                    
-                    default:
-                        break;
-                }                
-            }     
-        }        
-    }    
+    SWSTATUS swstat = sw_debounce(ACTION_GetValue(), &actionswitch);
+    if(swstat == FULLDOWN){
+        // action trigger.  
+        if((procstatus & 0x0010) == 0) actionswitchevent = PRESSED;
+        procstatus = procstatus | 0x0010;        
+        
+    }else if(swstat == FULLUP){        
+        procstatus = procstatus & 0xFFEF;     
+    }
 }
 
+SWEVENT get_actionswitch(){
+    SWEVENT swe = actionswitchevent;
+    actionswitchevent = NOEVENT;
+    return swe;
+}
 
 
 ENCSW encswRead(void){
@@ -156,56 +135,7 @@ ENCSWEVENT encswEvent(void){
     return event;
 }
 
-void encswUpdate(void){
-    static uint8_t encswreg = 0xFF;
-    static uint16_t statecnt = 0;    
-    
-    // debounce switch
-    encswreg = encswreg << 1;
-    if(LIM1_GetValue()){        
-        encswreg = encswreg | 1;        
-    }
-    else{
-        encswreg = encswreg & 0xFE;
-    }
-    
-    if(encswreg == 0xFF){
-        switch(encsw){
-            case SW_UP: 
-                if(statecnt == 0xFFFF) return;
-                statecnt++;
-                return;
-            case SW_DOWN:
-                if(statecnt < 1000)
-                    encswevent = SW_CLICKED;
-                else
-                    encswevent = SW_LCLICKED;
-                encsw = SW_UP;
-                statecnt = 0;
-                return;                
-            case SW_INVALID:
-                encsw = SW_UP;
-                statecnt = 0;
-                return; 
-            default:
-                return;            
-        }        
-    }
-    else if(encswreg == 0){
-        switch(encsw){
-            case SW_UP:
-                encsw = SW_DOWN;
-                statecnt = 0;
-                return;
-            case SW_DOWN:
-                if(statecnt == 0xFFFF) return;
-                statecnt++;
-                return;
-            default:
-                return;             
-        }                 
-    }        
-}
+
 
 void setCH1Value(int16_t p){
     ch1pressure = p;
@@ -233,9 +163,6 @@ void set_ADCValueCH1(int16_t value){
     adcvaluech1 = value;
 }
 
-void test_SetADCValue(int16_t value){
-    adcvalue = value;
-}
 
 void test_SetTestValue(int16_t v){
     testvalue = v;
@@ -260,6 +187,88 @@ SWSTATUS sw_debounce(uint16_t sw, uint16_t* swstate){
     }else 
         sws = PARTDOWN;
         return sws;    
+    
+}
+
+void run_poweron() {
+    static POWERONSTATE postate = START;
+    static uint16_t errorcnt = 0;
+    MAINMSG msg;
+    if (is_newmsg()) {
+        msg = get_msg();
+    } else msg = RPY_none;
+
+    switch (postate) {
+
+        case START:
+            send_msg(MSG_poweron);
+            if ((msg.validf == true) && (msg.command == RPO_init)) {
+                postate = INIT;
+            }
+            break;
+
+        case INIT:
+            // init process goes here.
+
+            postate = FINISH;
+            break;
+
+        case FINISH:
+            // powerup finish process goes here.
+            runmode = MODE_RUN;
+            break;
+
+        default:
+            break;
+    }
+    if(msg.command == RPO_error){
+        errorcnt++;
+        if(errorcnt == 3){
+            errorcnt = 0;
+            prevmode = runmode;
+            runmode = MODE_COMMERROR;   
+        }
+    }    
+}
+
+void run_operate(){    
+     
+    MAINMSG msg;    
+    if (is_newmsg()) {
+        msg = get_msg();
+    } else msg = RPY_none;
+    
+    
+    switch(msg.command){
+        
+        
+        case RPO_none:
+            
+            break;
+            
+        case RPO_probepressure:
+            set_p1pressureindex(msg.data1);
+            set_p2pressureindex(msg.data2);            
+            break;
+        
+        default:
+            break;
+    }   
+    
+    msg.command = MSG_testmode1.command;
+    msg.data1 = adcvaluech0;    
+    msg.data2 = adcvaluech1;
+    msg.data3 = procstatus;
+    send_msg(msg);  
+}
+
+void run_commerror(){
+ // process restart of communication with control panel here.   
+  
+    //test setup
+    runmode = prevmode;
+    prevmode = MODE_NONE;
+    
     
 }
 

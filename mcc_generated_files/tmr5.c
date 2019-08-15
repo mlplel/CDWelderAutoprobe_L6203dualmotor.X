@@ -86,8 +86,8 @@ void TMR5_Initialize (void)
 {
     //TMR5 0; 
     TMR5 = 0x00;
-    //Period = 0.0001299926 s; Frequency = 30170937 Hz; PR5 3923; 
-    PR5 = 0xF53;
+    //Period = 0.0003500057 s; Frequency = 30170937 Hz; PR5 10560; 
+    PR5 = 0x2940;
     //TCKPS 1:1; TON enabled; TSIDL disabled; TCS FOSC/2; TGATE disabled; 
     T5CON = 0x8000;
 

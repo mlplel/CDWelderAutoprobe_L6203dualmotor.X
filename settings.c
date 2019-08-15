@@ -14,12 +14,12 @@ static int p2index = 0;
 static int16_t p1zeropressure;
 static int16_t p2zeropressure;
 
-static int pressure[15] = {1500, 3000, 4900, 6500, 8500, 9800, 11900, 13300,
-14900, 16900, 18100, 20300, 21700, 23500, 25000};
-static int kp[15] = {150, 155, 165, 180, 190, 200, 210, 220, 230, 240,
-    250, 260, 270, 280, 300};
-static int ki[15] = {70, 70, 90, 90, 90, 105, 110, 115, 120, 125,
-    130, 135, 140, 145, 165};
+static int pressure[15] = {2400, 3900, 5600, 7200, 8900, 10600, 12100, 13900,
+15400, 17000, 18500, 20500, 22500, 24000, 25900};
+static int kp[15] = {180, 180, 180, 180, 190, 200, 200, 210, 210, 210,
+    220, 260, 270, 290, 300};
+static int ki[15] = {90, 90, 100, 100, 100, 110, 110, 110, 120, 120,
+    120, 130, 130, 130, 130};
 
 
 void settings_init(void){
@@ -27,10 +27,10 @@ void settings_init(void){
 }
 
 void set_p1pressureindex(uint16_t i){
-    p1index = i;    
+    p1index = i - 1;    
 }
 void set_p2pressureindex(uint16_t i){
-    p2index = i;
+    p2index = i - 1;
 }
 
 int16_t getP1Pressure(){

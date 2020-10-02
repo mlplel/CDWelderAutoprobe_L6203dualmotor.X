@@ -52,17 +52,16 @@
 */
 void INTERRUPT_Initialize (void)
 {
-            
-     //    ADI: ADC1 Convert Done
+   //    ADI: ADC1 Convert Done
     //    Priority: 1
         IPC3bits.AD1IP = 1; 
         
    //    SPII: SPI2 transfer done
     //    Priority: 1
-        IPC8bits.SPI2IP = 4;
-        IPC8bits.SPI2EIP = 5;
+        //IPC8bits.SPI2IP = 4;
+        //IPC8bits.SPI2EIP = 5;
         
     //    TI: Timer 5
     //    Priority: 1
-        IPC7bits.T5IP = 1;    
+     //   IPC7bits.T5IP = 1;  
 }

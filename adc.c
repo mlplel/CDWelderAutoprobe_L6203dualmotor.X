@@ -14,21 +14,29 @@ static ADC_CH ch1;
 void ADC_Init(void){        
     // bits 8-9  FORM<1:0> 
     // TMR5 starts adc conversion
-    AD1CON1 = 0x038C;
+    // AD1CON1 = 0x038C;
+    AD1CON1bits.FORM = 0x3;     // Signed fractional 
+    AD1CON1bits.SSRC = 0x4;     // Timer5 compare ends sampling and starts conversion
+    AD1CON1bits.SIMSAM = 1;     // Simultaneous Sample 
+    AD1CON1bits.ASAM = 1;       // Sampling begins immediately after the last conversion      
     
-    AD1CON2 = 0x0104;
+    //AD1CON2 = 0x0104;
+    AD1CON2bits.CHPS = 0x1;     // Converts CH0 and CH1
+    AD1CON2bits.SMPI = 0x1;     // interrupt after every 2nd sample/conversion operation
     
-    AD1CON3 = 0x0010;
+    // AD1CON3 = 0x0010;
+    AD1CON3bits.ADCS = 0x10;    // Tad = TP ? 17
     
     AD1CON4 = 0x0000;
     
-    AD1CHS0 = 0x0101;
+    //AD1CHS0 = 0x0101;
+    AD1CHS0bits.CH0SB = 0x1;    // Channel 0 positive input is AN1
+    AD1CHS0bits.CH0SA = 0x1;    // Channel 0 positive input is AN1
     
-    AD1CHS123 = 0x0000;
+    AD1CHS123 = 0x0000;         // Channel 1 AN0
     
-    AD1CSSH = 0x0000;
-    
-    AD1CSSL = 0x0000;       
+    AD1CSSH = 0x0000;           // no scan    
+    AD1CSSL = 0x0000;           // no scan  
     
 }
 

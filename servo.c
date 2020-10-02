@@ -20,6 +20,7 @@ static uint16_t servo1trigger = 0;
 static uint16_t servo2trigger = 0;
 
 static PID_TEMRS pid1;
+static PID_TEMRS pid2;
 //static int16_t pressure1setvalue;
 
 
@@ -32,7 +33,7 @@ void servo_Init(void) {
     
 }
 
-void servo_Trigger(SERVO_MODE m){
+void servo_trigger(SERVO_MODE m){
     
     if(m == SERVO1 || m == SERVOBOTH){
         //servo1trigger = SERVOTIME; 
@@ -40,7 +41,7 @@ void servo_Trigger(SERVO_MODE m){
         pid1.i = 0;
         pid1.d = 0;
         // pressure1setvalue = getP1Pressure();
-        PIDVALUE p = getP1Pid();
+        PIDVALUE p = get_P1pid();
         pid1.Kp = p.kp;
         pid1.Ki = p.ki;
          
@@ -50,38 +51,33 @@ void servo_Trigger(SERVO_MODE m){
         //display_
     }
     if(m == SERVO2 || m == SERVOBOTH){
-        servo2trigger = SERVOTIME;
+        servo2trigger = 1;
+        pid2.i = 0;
+        pid2.d = 0;
+        // pressure1setvalue = getP1Pressure();
+        PIDVALUE p = get_P2pid();
+        pid2.Kp = p.kp;
+        pid2.Ki = p.ki;
+         
+                   
+        motor2_on();
+        motor2_Move(200, MOTOR_DOWNMOTION);
     }        
 }
 
-void servo1_Stop(void){
-    servo1trigger = 0;
-    motor1_Hold();
-}
-
-void servo_1Run(int16_t p){
+void servo1_run(int16_t p){
     if(servo1trigger == 0)
         return;     
 
     int32_t error = getP1Pressure() - p;
-         // test screw hystera here
-    
-     if(motor1_isMotion() == MOTOR_DOWNMOTION){
-         error += 0;
-     }
-     else{
-         error -= 0;
-     }
-    
-    
+      
     pid1.i = error + pid1.i;
     if(pid1.i > isumMax)
         pid1.i = isumMax;
     else if(pid1.i < isumMin)
         pid1.i = isumMin;
     
-    int32_t derror = error - pid1.d;
-    pid1.d = error;
+ 
     /*
     if((error < 130) && (error > -130)){
         servo1trigger--;
@@ -91,9 +87,8 @@ void servo_1Run(int16_t p){
         return;
     }    
     */
-    //int32_t output = (error * pid1.Kp) + (pid1.i * pid1.Ki) + (derror * pid1.Kd);
     int32_t output = (error * pid1.Kp) + (pid1.i * pid1.Ki);
-    
+    //int32_t output = (error * pid1.Kp);
     MOTOR_MOTION m = MOTOR_DOWNMOTION;
     output = (output / 512);
     
@@ -105,7 +100,6 @@ void servo_1Run(int16_t p){
             output = 0;
         }
     }
-
     if(output > 1300){
         output = 1300;
     }        
@@ -114,3 +108,56 @@ void servo_1Run(int16_t p){
        
 }
 
+
+void servo1_stop(void){
+    servo1trigger = 0;
+    motor1_Hold();
+}
+
+void servo2_run(int16_t p){
+    if(servo2trigger == 0)
+        return;     
+
+    int32_t error = getP2Pressure() - p;
+      
+    pid2.i = error + pid2.i;
+    if(pid2.i > isumMax)
+        pid2.i = isumMax;
+    else if(pid2.i < isumMin)
+        pid2.i = isumMin;
+    
+
+    /*
+    if((error < 130) && (error > -130)){
+        servo1trigger--;
+        if(servo1trigger == 0){
+            motor1_Hold();
+        }
+        return;
+    }    
+    */
+    int32_t output = (error * pid2.Kp) + (pid2.i * pid2.Ki);
+    //int32_t output = (error * pid2.Kp);
+    MOTOR_MOTION m = MOTOR_DOWNMOTION;
+    output = (output / 512);
+    
+    if(output < 0){
+        m = MOTOR_UPMOTION;
+        output = abs(output);
+        if(get_probe2limit() == PROBE_UPLIMIT){
+            m = MOTOR_DOWNMOTION;
+            output = 0;
+        }
+    }
+    if(output > 1300){
+        output = 1300;
+    }        
+    
+    motor2_Move(output, m);       
+}
+
+
+void servo2_stop(void){
+    servo2trigger = 0;
+    motor2_Hold();
+}

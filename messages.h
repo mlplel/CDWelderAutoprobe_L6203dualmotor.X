@@ -22,11 +22,13 @@ extern "C" {
         RPO_none,
         RPO_command,
         RPO_probepressure,
+        RPO_calmode,
         CMD_poweron = 0xA301,
         CMD_init,
         CMD_cmdok,
         CMD_status,
         CMD_sync,
+        CMD_cal,
         CMD_testmode1 = 0xB101,
         RPO_error = 0xFFFF,
         CMD_error = 0xFFFF,
@@ -58,7 +60,8 @@ extern "C" {
     extern const MAINMSG MSG_cmdok;
     extern const MAINMSG MSG_testmode1;
     extern const MAINMSG MSG_sync;
-    extern const MAINMSG msg_error;
+    extern const MAINMSG MSG_error;
+    extern const MAINMSG MSG_calmode;
 
     extern const MAINMSG RPY_init;
     extern const MAINMSG RPY_status;
@@ -66,6 +69,7 @@ extern "C" {
     extern const MAINMSG RPY_none; 
     extern const MAINMSG PRY_probepressure;
     extern const MAINMSG RPY_error;
+    extern const MAINMSG RPY_cal;
 
 
 #ifdef	__cplusplus

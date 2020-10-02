@@ -16,6 +16,22 @@ extern "C" {
 #include <stdbool.h>
 #include "xc.h"
 #include "messages.h"
+    
+ /**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/  
+ void spi_init(void);   
 
     int16_t send_msg(MAINMSG msg);    
     MAINMSG get_msg(void);

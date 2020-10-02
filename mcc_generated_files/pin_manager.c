@@ -99,10 +99,10 @@ void PIN_MANAGER_Initialize (void)
     /****************************************************************************
      * Set the PPS
      ***************************************************************************/
-    RPOR0bits.RP20R = 0x0008;       // RA4->SPI2:SDO2
-    RPINR22bits.SDI2R = 0x0019;     // RA9->SPI2:SDI2
-    RPOR2bits.RP39R = 0x0009;       // RB7->SPI2:CLOCK
-    RPINR22bits.SCK2R = 0x0027;     // RB7->SPI2:CLOCK
+    //RPOR0bits.RP20R = 0x0008;       // RA4->SPI2:SDO2
+    //RPINR22bits.SDI2R = 0x0019;     // RA9->SPI2:SDI2
+    //RPOR2bits.RP39R = 0x0009;       // RB7->SPI2:CLOCK
+    //RPINR22bits.SCK2R = 0x0027;     // RB7->SPI2:CLOCK
 
 }
 

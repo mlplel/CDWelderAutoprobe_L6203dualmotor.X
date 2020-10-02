@@ -17,6 +17,48 @@ static int16_t msglog[80];
 static int16_t msglogp = 0;
 
 
+
+     
+
+/*
+ * 
+ */
+void spi_init(void){
+    
+    RPOR0bits.RP20R = 0x0008;       // RA4->SPI2:SDO2
+    RPINR22bits.SDI2R = 0x0019;     // RA9->SPI2:SDI2
+    RPOR2bits.RP39R = 0x0009;       // RB7->SPI2:CLOCK
+    RPINR22bits.SCK2R = 0x0027;     // RB7->SPI2:CLOCK
+    
+    // MSTEN Master;  PPRE 4:1; SPRE 8:1; MODE16 enabled; SMP Middle; DISSCK disabled; CKP Idle:Low, Active:High; CKE Active to Idle; SSEN disabled; 
+    // SPI2CON1 = 0x522;
+    SPI2CON1bits.MODE16 = 1;        // 16 bit mode
+    SPI2CON1bits.CKE = 1;           // data change on clock active to Idle 
+    SPI2CON1bits.MSTEN = 1;         // master mode
+    SPI2CON1bits.SPRE = 0;          // 000 = Secondary prescale 8:1
+    SPI2CON1bits.PPRE = 0x2;        // Primary prescale 4:1  
+    
+    
+    
+    // SPIFSD disabled; SPIBEN enabled; FRMPOL disabled; FRMDLY disabled; FRMEN disabled; 
+    SPI2CON2 = 0x01;
+    // SISEL SPI_INT_SPIRBF; SPIROV disabled; SPIEN enabled; SPISIDL disabled; 
+    SPI2STAT = 0x8014; 
+    
+         
+    IPC8bits.SPI2IP = 4;        // _SPI2Interrupt priority
+    IPC8bits.SPI2EIP = 5;       // _SPI2ErrInterrupt priority
+    
+    
+    IFS2bits.SPI2IF = 0;        
+    IEC2bits.SPI2IE = 1;        // _SPI2Interrupt enabled
+    
+    IFS2bits.SPI2EIF = 0;
+    IEC2bits.SPI2EIE = 1;       // _SPI2ErrInterrupt enabled
+       
+    
+}
+
 int16_t send_msg(MAINMSG msg){
     int16_t status = SPI2STATbits.SPIBEC;
     

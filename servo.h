@@ -31,10 +31,12 @@ extern "C" {
     
     void servo_Init(void);
     
-    void servo_Trigger(SERVO_MODE m);
+    void servo_trigger(SERVO_MODE m);
     
-    void servo_1Run(int16_t );
-    void servo1_Stop(void);
+    void servo1_run(int16_t);
+    void servo1_stop(void);
+    void servo2_run(int16_t);
+    void servo2_stop(void);
 
 
 #ifdef	__cplusplus

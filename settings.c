@@ -41,11 +41,18 @@ int16_t getP2Pressure(){
     return pressure[p2index] + p2zeropressure;
 }
 
-PIDVALUE getP1Pid(){
+PIDVALUE get_P1pid(){
     PIDVALUE pid;
     pid.kp = kp[p1index];
     pid.ki = ki[p1index];
     return pid;
+}
+
+PIDVALUE get_P2pid(){
+    PIDVALUE pid;
+    pid.kp = kp[p1index];
+    pid.ki = ki[p1index];
+    return pid;   
 }
 
 void setP1ZeroPressure(){

@@ -45,40 +45,45 @@ static uint16_t procstatus = 0x0000;
 void loop100us(void){
     
     //IO_RC3_Toggle(); 
-    MOTOR_MOTION mm = motor1_isMotion();
-    if (mm == MOTOR_UPMOTION) {
+    MOTOR_MOTION mm1 = motor1_isMotion();
+    MOTOR_MOTION mm2 = motor2_isMotion();
+    if (mm1 == MOTOR_UPMOTION) {
         if (get_probe1limit() == PROBE_UPLIMIT) {
             motor1_off();
         }
-        if (get_probe2limit() == PROBE_UPLIMIT) {
-            motor2_off();
-        }
-    } else if (mm == MOTOR_DOWNMOTION) {
+    } else if (mm1 == MOTOR_DOWNMOTION) {
         if (get_probe1limit() == PROBE_DOWNLIMIT) {
             motor1_off();
         }
+    }
+
+    if (mm2 == MOTOR_UPMOTION) {
+        if (get_probe2limit() == PROBE_UPLIMIT) {
+            motor2_off();
+        }
+    } else if (mm2 == MOTOR_DOWNMOTION) {
         if (get_probe2limit() == PROBE_DOWNLIMIT) {
             motor2_off();
         }
-    }    
+    }   
 }
 
 // called every 1 ms.
-void loop1ms(void){ 
-    
+void loop1ms(void){     
     // main run mode selected here
     switch(runmode){
         
         case MODE_POWERON:
             run_poweron();
-            break;
-            
+            break;            
         case MODE_RUN:
             run_operate();
-            break;
-            
+            break;            
         case MODE_COMMERROR:
             run_commerror();
+            break;
+        case MODE_CAL:
+            run_cal();
             break;
             
         default:
@@ -145,14 +150,18 @@ void setCH1Value(int16_t p){
 void test_Probe1(void){
   
     if(probeaction == PROBEDOWN){
-        servo_Trigger(SERVO1);
-        //motor1_On();
-        //motor1_Move(encvalue * 10, MOTOR_DOWNMOTION);
+        servo_trigger(SERVOBOTH);
+        
     }
     else{
-        servo1_Stop();
+        servo1_stop();
         motor1_on();
-        motor1_Move(1200, MOTOR_UPMOTION);
+        motor1_Move(800, MOTOR_UPMOTION);
+        
+        servo2_stop();
+        motor2_on();
+        motor2_Move(800, MOTOR_UPMOTION);
+        
     }
 }
 
@@ -189,7 +198,7 @@ SWSTATUS sw_debounce(uint16_t sw, uint16_t* swstate){
         return sws;    
     
 }
-
+// called till power up process finished
 void run_poweron() {
     static POWERONSTATE postate = START;
     static uint16_t errorcnt = 0;
@@ -231,6 +240,7 @@ void run_poweron() {
     }    
 }
 
+// called while in the operate mode
 void run_operate(){    
      
     MAINMSG msg;    
@@ -239,16 +249,20 @@ void run_operate(){
     } else msg = RPY_none;
     
     
-    switch(msg.command){
+    switch(msg.command){        
         
-        
-        case RPO_none:
-            
+        case RPO_none:            
             break;
-            
+         
+        // command to set probe pressures    
         case RPO_probepressure:
             set_p1pressureindex(msg.data1);
             set_p2pressureindex(msg.data2);            
+            break;
+        
+        // command to switch to Calibrate and test mode
+        case RPO_calmode:
+            runmode = MODE_CAL;
             break;
         
         default:
@@ -269,6 +283,37 @@ void run_commerror(){
     runmode = prevmode;
     prevmode = MODE_NONE;
     
+    
+}
+
+//calibrate and test operations
+void run_cal(){
+    static CALSTATE calstate = CAL_START;
+    
+    MAINMSG msg;
+
+    switch (calstate) {
+
+        case CAL_START:
+            if(send_msg(MSG_calmode) == 0){
+                calstate = CAL_RUN;
+            }
+            break;
+            
+        case CAL_RUN:
+            
+            
+                msg.command = MSG_testmode1.command;
+                    msg.data1 = adcvaluech0;    
+                 msg.data2 = adcvaluech1;
+            msg.data3 = procstatus;
+            send_msg(msg);  
+            break;
+
+        default:
+            break;
+    }
+
     
 }
 

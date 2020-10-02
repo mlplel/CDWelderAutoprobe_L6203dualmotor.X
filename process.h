@@ -51,6 +51,7 @@ extern "C" {
         MODE_POWERON,
         MODE_RUN,
         MODE_TEST,
+        MODE_CAL,
         MODE_COMMERROR,
         MODE_NONE,
     } RUNMODE;
@@ -66,6 +67,12 @@ extern "C" {
         INIT,
         FINISH,
     } POWERONSTATE;    
+    
+    typedef enum {
+        CAL_START,
+        CAL_RUN,
+                
+    }CALSTATE;
 
     
 void loop1ms(void);
@@ -96,6 +103,7 @@ SWEVENT get_actionswitch(void);
 void run_poweron(void);
 void run_operate(void);
 void run_commerror(void);
+void run_cal(void);
 
 
 #ifdef	__cplusplus

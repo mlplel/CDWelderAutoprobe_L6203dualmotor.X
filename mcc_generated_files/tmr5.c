@@ -86,14 +86,12 @@ void TMR5_Initialize (void)
 {
     //TMR5 0; 
     TMR5 = 0x00;
-    //Period = 0.0003500057 s; Frequency = 30170937 Hz; PR5 10560; 
-    PR5 = 0x2940;
+    //Period = 0.0004999845 s; Frequency = 30170937 Hz; PR5 15086; 
+    PR5 = 0x3AEE;
     //TCKPS 1:1; TON enabled; TSIDL disabled; TCS FOSC/2; TGATE disabled; 
     T5CON = 0x8000;
 
     
-    IFS1bits.T5IF = false;
-    IEC1bits.T5IE = true;
 	
     tmr5_obj.timerElapsed = false;
 
@@ -101,21 +99,15 @@ void TMR5_Initialize (void)
 
 
 
-void __attribute__ ( ( interrupt, no_auto_psv ) ) _T5Interrupt (  )
+void TMR5_Tasks_16BitOperation( void )
 {
     /* Check if the Timer Interrupt/Status is set */
-
-    //***User Area Begin
-
-    // ticker function call;
-    // ticker is 1 -> Callback function gets called everytime this ISR executes
-    TMR5_CallBack();
-
-    //***User Area End
-
-    tmr5_obj.count++;
-    tmr5_obj.timerElapsed = true;
-    IFS1bits.T5IF = false;
+    if(IFS1bits.T5IF)
+    {
+        tmr5_obj.count++;
+        tmr5_obj.timerElapsed = true;
+        IFS1bits.T5IF = false;
+    }
 }
 
 
@@ -146,18 +138,12 @@ uint16_t TMR5_Counter16BitGet( void )
 }
 
 
-void __attribute__ ((weak)) TMR5_CallBack(void)
-{
-    // Add your custom callback code here
-}
 
 void TMR5_Start( void )
 {
     /* Reset the status information */
     tmr5_obj.timerElapsed = false;
 
-    /*Enable the interrupt*/
-    IEC1bits.T5IE = true;
 
     /* Start the Timer */
     T5CONbits.TON = 1;
@@ -168,8 +154,6 @@ void TMR5_Stop( void )
     /* Stop the Timer */
     T5CONbits.TON = false;
 
-    /*Disable the interrupt*/
-    IEC1bits.T5IE = false;
 }
 
 bool TMR5_GetElapsedThenClear(void)

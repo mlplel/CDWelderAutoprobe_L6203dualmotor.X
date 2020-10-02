@@ -24,7 +24,8 @@ extern "C" {
     void set_p2pressureindex(uint16_t i);
     int16_t getP1Pressure(void);
     int16_t getP2Pressure(void);
-    PIDVALUE getP1Pid(void);
+    PIDVALUE get_P1pid(void);
+    PIDVALUE get_P2pid(void);
     
     void setP1ZeroPressure(void);
     int16_t get_p1zeropressure(void);

@@ -66,7 +66,8 @@ int16_t syncControl(void);
 
 void initialize(void) {
 
-    SYSTEM_Initialize();    
+    SYSTEM_Initialize();  
+    spi_init();
     PWM_ModuleEnable();
     servo_Init();
     ADC_Init();
@@ -111,14 +112,15 @@ int main(void)
          if(ADC_IsCH0Valid()){
              int16_t adctemp = ADC_GetCH0();
             
-             set_ADCValueCH0(adctemp);             
+             set_ADCValueCH0(adctemp); 
+             servo2_run(adctemp);
         }
         if(ADC_IsCH1Valid()) {
             int16_t adctemp = ADC_GetCH1();
            
             //test_SetADCValue(adctemp);
             set_ADCValueCH1(adctemp);
-            servo_1Run(adctemp);
+            servo1_run(adctemp);
         //testValues(filter(adctemp), adctemp);        
         }
         // Add your application code                     

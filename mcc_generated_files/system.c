@@ -46,19 +46,17 @@
 #include "clock.h"
 #include "system.h"
 #include "system_types.h"
-#include "interrupt_manager.h"
-#include "traps.h"
-#include "spi2.h"
-#include "pwm.h"
 #include "tmr5.h"
 #include "tmr2.h"
+#include "interrupt_manager.h"
+#include "traps.h"
+#include "pwm.h"
 
 void SYSTEM_Initialize(void)
 {
     PIN_MANAGER_Initialize();
     INTERRUPT_Initialize();
     CLOCK_Initialize();
-    SPI2_Initialize();
     PWM_Initialize();
     TMR5_Initialize();
     TMR2_Initialize();

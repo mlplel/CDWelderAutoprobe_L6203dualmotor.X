@@ -13,15 +13,22 @@
 #include "mcc_generated_files/mcc.h"
 
 const uint16_t SERVOTIME = 70;
-const int16_t isumMax = 2000;
-const int16_t isumMin = -2000;
+//static int16_t isumMax = 2000;
+//static int16_t isumMin = -2000;
+//static int16_t maxout = 1300;
 
 static uint16_t servo1trigger = 0;
 static uint16_t servo2trigger = 0;
 
 static PID_TEMRS pid1;
 static PID_TEMRS pid2;
+static int16_t perror1 = 0;
+static int16_t perror2 = 0;
+static MOTOR_MOTION mm1 = MOTOR_DOWNMOTION;
+static MOTOR_MOTION mm2 = MOTOR_DOWNMOTION;
 //static int16_t pressure1setvalue;
+PRESSET ps1, ps2;
+
 
 
 void servo_Init(void) {
@@ -40,10 +47,14 @@ void servo_trigger(SERVO_MODE m){
         servo1trigger = 1;
         pid1.i = 0;
         pid1.d = 0;
+        perror1 = 0;
+        mm1 = MOTOR_DOWNMOTION;
         // pressure1setvalue = getP1Pressure();
-        PIDVALUE p = get_P1pid();
-        pid1.Kp = p.kp;
-        pid1.Ki = p.ki;
+        //PIDVALUE p = get_P1pid();
+        ps1 = getP1();
+        pid1.Kp = ps1.kp;
+        pid1.Ki = ps1.ki;
+        pid1.Kd = ps2.kd;
          
                    
         motor1_on();
@@ -54,10 +65,14 @@ void servo_trigger(SERVO_MODE m){
         servo2trigger = 1;
         pid2.i = 0;
         pid2.d = 0;
+        perror2 = 0;
+        mm2 = MOTOR_DOWNMOTION;
         // pressure1setvalue = getP1Pressure();
-        PIDVALUE p = get_P2pid();
-        pid2.Kp = p.kp;
-        pid2.Ki = p.ki;
+        //PIDVALUE p = get_P2pid();
+        ps2 = getP2();
+        pid2.Kp = ps2.kp;
+        pid2.Ki = ps2.ki;
+        pid2.Kd = ps2.kd;
          
                    
         motor2_on();
@@ -66,18 +81,37 @@ void servo_trigger(SERVO_MODE m){
 }
 
 void servo1_run(int16_t p){
-    if(servo1trigger == 0)
-        return;     
-
-    int32_t error = getP1Pressure() - p;
-      
-    pid1.i = error + pid1.i;
-    if(pid1.i > isumMax)
-        pid1.i = isumMax;
-    else if(pid1.i < isumMin)
-        pid1.i = isumMin;
+    static uint16_t itime = 0;
+ //   static uint16_t dtime = 0;
+    static uint16_t otime = 0;
     
- 
+    if(servo1trigger == 0)
+        return; 
+    
+    if(otime != 0){
+        otime--;
+        pid1.i = 0;
+        return;
+    }
+   
+    int32_t error = ps1.pressure - p;
+    
+    if (itime == 0) {
+        pid1.i = error + pid1.i;
+        if (pid1.i > ps1.imax)
+            pid1.i = ps1.imax;
+        else if (pid1.i < (0 - ps1.imax))
+            pid1.i = (0 - ps1.imax);
+        itime = 3;
+    }
+    
+    /*
+    if(dtime == 0){
+        pid1.d = error - perror1;
+        perror1 = error;
+        dtime = 3;
+    }
+    */
     /*
     if((error < 130) && (error > -130)){
         servo1trigger--;
@@ -87,7 +121,7 @@ void servo1_run(int16_t p){
         return;
     }    
     */
-    int32_t output = (error * pid1.Kp) + (pid1.i * pid1.Ki);
+    int32_t output = (error * pid1.Kp) + (pid1.i * pid1.Ki); // + (pid1.d * pid1.Kd);
     //int32_t output = (error * pid1.Kp);
     MOTOR_MOTION m = MOTOR_DOWNMOTION;
     output = (output / 512);
@@ -100,11 +134,19 @@ void servo1_run(int16_t p){
             output = 0;
         }
     }
-    if(output > 1300){
-        output = 1300;
+    if(mm1 != m){
+        otime = 20;
+        mm1 = m;
+        output = 0;
+    }
+    if(output > ps1.outlimit){
+        output = ps1.outlimit;
+        itime++;
     }        
     
     motor1_Move(output, m);
+    itime--;
+    //dtime--;
        
 }
 
@@ -115,18 +157,37 @@ void servo1_stop(void){
 }
 
 void servo2_run(int16_t p){
-    if(servo2trigger == 0)
-        return;     
-
-    int32_t error = getP2Pressure() - p;
-      
-    pid2.i = error + pid2.i;
-    if(pid2.i > isumMax)
-        pid2.i = isumMax;
-    else if(pid2.i < isumMin)
-        pid2.i = isumMin;
+    static uint16_t itime = 0;
+ //   static uint16_t dtime = 0;
+    static uint16_t otime = 0;
     
+    if(servo2trigger == 0)
+        return;   
+    
+    if(otime != 0){
+        otime--;
+        pid2.i = 0;
+        return;
+    }
 
+    int32_t error = ps2.pressure - p;
+
+    if (itime == 0) {
+        pid2.i = error + pid2.i;
+        if (pid2.i > ps2.imax)
+            pid2.i = ps2.imax;
+        else if (pid2.i < (0 - ps2.imax))
+            pid2.i = (0 - ps2.imax);
+        itime = 3;
+    }
+
+    /*
+    if(dtime == 0){
+        pid2.d = error - perror2;
+        perror2 = error;
+        dtime = 3;
+    }
+     */
     /*
     if((error < 130) && (error > -130)){
         servo1trigger--;
@@ -136,7 +197,7 @@ void servo2_run(int16_t p){
         return;
     }    
     */
-    int32_t output = (error * pid2.Kp) + (pid2.i * pid2.Ki);
+    int32_t output = (error * pid2.Kp) + (pid2.i * pid2.Ki); // + (pid2.d * pid2.Kd);
     //int32_t output = (error * pid2.Kp);
     MOTOR_MOTION m = MOTOR_DOWNMOTION;
     output = (output / 512);
@@ -149,11 +210,19 @@ void servo2_run(int16_t p){
             output = 0;
         }
     }
-    if(output > 1300){
-        output = 1300;
+    if(mm2 != m){
+        otime = 20;
+        mm2 = m;
+        output = 0;
+    }
+    if(output > ps2.outlimit){
+        output = ps2.outlimit;
+        itime++;
     }        
     
-    motor2_Move(output, m);       
+    motor2_Move(output, m);    
+    itime--;
+   // dtime--;
 }
 
 

@@ -18,6 +18,15 @@ extern "C" {
         uint16_t kp;
         uint16_t ki;
     }PIDVALUE;
+    
+    typedef struct {
+        int16_t pressure;
+        int16_t kp;
+        int16_t ki;
+        int16_t kd;
+        int16_t imax;
+        int16_t outlimit;        
+    }PRESSET;
 
     void settings_init(void);    
     void set_p1pressureindex(uint16_t i);
@@ -26,6 +35,8 @@ extern "C" {
     int16_t getP2Pressure(void);
     PIDVALUE get_P1pid(void);
     PIDVALUE get_P2pid(void);
+    PRESSET getP1(void);
+    PRESSET getP2(void);
     
     void setP1ZeroPressure(void);
     int16_t get_p1zeropressure(void);

@@ -64,7 +64,7 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _AD1Interrupt(void){
     // use if adc data left aligned
     ch0.value = (((int16_t)ADC1BUF0 / 2) + ((int16_t)ADC1BUF2 / 2));
     ch0.value = LPFilterCH0(ch0.value);
-    ch0.value = ch0.value & 0xff80;
+    ch0.value = ch0.value & 0xff80;     // 9 bits of information
     ch0.validf = true;
     
     // use if adc data right aligned
@@ -72,7 +72,7 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _AD1Interrupt(void){
     // use if adc data left aligned
     ch1.value = (((int16_t)ADC1BUF1 / 2) + ((int16_t)ADC1BUF3 / 2));
     ch1.value = LPFilterCH1(ch1.value);
-    ch1.value = ch1.value & 0xff80;
+    ch1.value = ch1.value & 0xff80;     // 9 bits of information
     ch1.validf = true;    
 }
 

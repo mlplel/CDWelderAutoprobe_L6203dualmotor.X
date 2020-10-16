@@ -73,6 +73,17 @@ int16_t send_msg(MAINMSG msg){
     return 0;  
 }
 
+/*
+ * 
+ */
+bool is_txbusy(){
+    
+    if(SPI2STATbits.SPIBEC == 0){
+        return false;
+    } else
+        return true;
+}
+
 MAINMSG get_msg(){
      
     MAINMSG msg;

@@ -50,7 +50,7 @@
  
 #include "process.h"
 #include <libpic30.h>
-#include "qei.h"
+//#include "qei.h"
 #include "motor.h"
 #include "adc.h"
 #include "servo.h"
@@ -69,10 +69,9 @@ void initialize(void) {
     SYSTEM_Initialize();  
     spi_init();
     PWM_ModuleEnable();
-    servo_Init();
     ADC_Init();
     ADC_On();
-    settings_init();
+    // settings_init();
 }
 
 //set startup positions and values

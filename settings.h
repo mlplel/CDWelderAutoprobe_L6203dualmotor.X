@@ -9,6 +9,7 @@
 #define	SETTINGS_H
 
 #include "xc.h"
+#include "servo.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -19,14 +20,7 @@ extern "C" {
         uint16_t ki;
     }PIDVALUE;
     
-    typedef struct {
-        int16_t pressure;
-        int16_t kp;
-        int16_t ki;
-        int16_t kd;
-        int16_t imax;
-        int16_t outlimit;        
-    }PRESSET;
+   
 
     void settings_init(void);    
     void set_p1pressureindex(uint16_t i);

@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include "mcc_generated_files/mcc.h"
 
-const uint16_t SERVOTIME = 70;
+//const uint16_t SERVOTIME = 70;
 //static int16_t isumMax = 2000;
 //static int16_t isumMin = -2000;
 //static int16_t maxout = 1300;
@@ -26,23 +26,14 @@ static int16_t perror1 = 0;
 static int16_t perror2 = 0;
 static MOTOR_MOTION mm1 = MOTOR_DOWNMOTION;
 static MOTOR_MOTION mm2 = MOTOR_DOWNMOTION;
-//static int16_t pressure1setvalue;
-PRESSET ps1, ps2;
+static PRESSET ps1 = {0,0,0,0,0,0,false};
+static PRESSET ps2 = {0,0,0,0,0,0,false};
+static SERVO_MODE servomode = SERVO_NONE;
 
-
-
-void servo_Init(void) {
-    pid1.Kp = 150;
-    pid1.Ki = 80;
-    pid1.Kd = 0;
-    pid1.i = 0;
-    pid1.d = 0;
-    
-}
 
 void servo_trigger(SERVO_MODE m){
     
-    if(m == SERVO1 || m == SERVOBOTH){
+    if(servomode == SERVO_PR || servomode == SERVO_BOTH){
         //servo1trigger = SERVOTIME; 
         servo1trigger = 1;
         pid1.i = 0;
@@ -51,17 +42,16 @@ void servo_trigger(SERVO_MODE m){
         mm1 = MOTOR_DOWNMOTION;
         // pressure1setvalue = getP1Pressure();
         //PIDVALUE p = get_P1pid();
-        ps1 = getP1();
+        //ps1 = getP1();
         pid1.Kp = ps1.kp;
         pid1.Ki = ps1.ki;
-        pid1.Kd = ps2.kd;
-         
+        pid1.Kd = ps2.kd;         
                    
         motor1_on();
         motor1_Move(200, MOTOR_DOWNMOTION);
-        //display_
+       
     }
-    if(m == SERVO2 || m == SERVOBOTH){
+    if(servomode == SERVO_PL || servomode == SERVO_BOTH){
         servo2trigger = 1;
         pid2.i = 0;
         pid2.d = 0;
@@ -69,11 +59,10 @@ void servo_trigger(SERVO_MODE m){
         mm2 = MOTOR_DOWNMOTION;
         // pressure1setvalue = getP1Pressure();
         //PIDVALUE p = get_P2pid();
-        ps2 = getP2();
+        //ps2 = getP2();
         pid2.Kp = ps2.kp;
         pid2.Ki = ps2.ki;
-        pid2.Kd = ps2.kd;
-         
+        pid2.Kd = ps2.kd;         
                    
         motor2_on();
         motor2_Move(200, MOTOR_DOWNMOTION);
@@ -149,7 +138,6 @@ void servo1_run(int16_t p){
     //dtime--;
        
 }
-
 
 void servo1_stop(void){
     servo1trigger = 0;
@@ -229,4 +217,30 @@ void servo2_run(int16_t p){
 void servo2_stop(void){
     servo2trigger = 0;
     motor2_Hold();
+}
+
+/*
+ *  servo operate mode
+ */
+uint16_t servo_setmode(SERVO_MODE m) {
+   
+        servomode = m;
+        return 1;
+}
+
+/*
+ * 
+ */
+void servo_setprobe(SERVOPROBE p, PRESSET data) {
+
+    if (p == PR) {
+        ps1 = data;
+        ps1.pressure = get_p1zeropressure() + ps1.pressure;
+        return;
+    }
+    if (p == PL) {
+        ps2 = data;
+        ps2.pressure = get_p2zeropressure() + ps2.pressure;
+        return;
+    }
 }

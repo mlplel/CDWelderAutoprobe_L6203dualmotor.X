@@ -28,14 +28,44 @@ extern "C" {
     
   @Param
    
-  @Example 
-    
+  @Example     
 */  
  void spi_init(void);   
 
     int16_t send_msg(MAINMSG msg);    
     MAINMSG get_msg(void);
     bool is_newmsg(void);
+    
+ /**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example     
+*/
+ bool is_txbusy(void);   
+    
+    
+    
+ /**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example     
+*/    
 
 #ifdef	__cplusplus
 }

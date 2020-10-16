@@ -9,6 +9,8 @@
 #define	SERVO_H
 
 #include "xc.h"
+#include <stdbool.h>
+
 
 #ifdef	__cplusplus
 extern "C" {
@@ -23,20 +25,95 @@ extern "C" {
     }PID_TEMRS;
     
     typedef enum {
-        SERVO1,
-        SERVO2,
-        SERVOBOTH
+        SERVO_PR,
+        SERVO_PL,
+        SERVO_BOTH,
+        SERVO_NONE
     }SERVO_MODE;
     
+     typedef struct {
+        int16_t pressure;
+        int16_t kp;
+        int16_t ki;
+        int16_t kd;
+        int16_t imax;
+        int16_t outlimit;   
+        bool validf;
+    }PRESSET;
     
-    void servo_Init(void);
+typedef enum {
+        PR = 1,
+        PL
+    } SERVOPROBE;
     
+ /**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/    
+     
     void servo_trigger(SERVO_MODE m);
     
     void servo1_run(int16_t);
     void servo1_stop(void);
     void servo2_run(int16_t);
     void servo2_stop(void);
+    
+/**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/  
+uint16_t servo_setmode(SERVO_MODE m);
+
+/**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/
+void servo_setprobe(SERVOPROBE p, PRESSET data);   
+    
+ /**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/    
 
 
 #ifdef	__cplusplus

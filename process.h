@@ -47,6 +47,7 @@ extern "C" {
         PARTDOWN
     } SWSTATUS;
 
+    /*
     typedef enum {
         MODE_POWERON,
         MODE_RUN,
@@ -55,7 +56,7 @@ extern "C" {
         MODE_COMMERROR,
         MODE_NONE,
     } RUNMODE;
-
+*/
     typedef enum {
         NOEVENT,
         CLICKED,
@@ -73,6 +74,11 @@ extern "C" {
         CAL_RUN,
                 
     }CALSTATE;
+
+    typedef enum {
+        MSG_SEND,
+        MSG_RECV
+    } MSG_STATE;
 
     
 void loop1ms(void);

@@ -47,16 +47,6 @@ extern "C" {
         PARTDOWN
     } SWSTATUS;
 
-    /*
-    typedef enum {
-        MODE_POWERON,
-        MODE_RUN,
-        MODE_TEST,
-        MODE_CAL,
-        MODE_COMMERROR,
-        MODE_NONE,
-    } RUNMODE;
-*/
     typedef enum {
         NOEVENT,
         CLICKED,
@@ -106,10 +96,10 @@ SWSTATUS sw_debounce(uint16_t sw, uint16_t* swstate);
 void proc_actionswitch(void);
 SWEVENT get_actionswitch(void);
 
-void run_poweron(void);
-void run_operate(void);
-void run_commerror(void);
-void run_cal(void);
+//void run_poweron(void);
+//void run_operate(void);
+//void run_commerror(void);
+//void run_cal(void);
 
 
 #ifdef	__cplusplus

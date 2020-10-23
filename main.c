@@ -109,14 +109,12 @@ int main(void)
         } 
         //processStrainValue(filter(readADC()));
          if(ADC_IsCH0Valid()){
-             int16_t adctemp = ADC_GetCH0();
-            
+             int16_t adctemp = ADC_GetCH0();            
              set_ADCValueCH0(adctemp);      // test use
              servo2_run(adctemp);
         }
         if(ADC_IsCH1Valid()) {
-            int16_t adctemp = ADC_GetCH1();
-           
+            int16_t adctemp = ADC_GetCH1();           
             //test_SetADCValue(adctemp);
             set_ADCValueCH1(adctemp);       // test use
             servo1_run(adctemp);

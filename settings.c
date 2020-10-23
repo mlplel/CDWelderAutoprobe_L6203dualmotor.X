@@ -100,13 +100,11 @@ PIDVALUE get_P2pid(){
     return pid;   
 }
 
+
+/*
 void setP1ZeroPressure(){
      while(ADC_IsCH1Valid() == false);
      p1zeropressure = ADC_GetCH1();
-     int i;
-     for(i = 0; i < 15; i++){
-         ps1[i].pressure = ps1[i].pressure + p1zeropressure;
-     }
 }
 int16_t get_p1zeropressure(){
     return p1zeropressure;
@@ -115,11 +113,8 @@ int16_t get_p1zeropressure(){
 void setP2ZeroPressure(){
      while(ADC_IsCH0Valid() == false);
      p2zeropressure = ADC_GetCH0();
-     int i;
-      for(i = 0; i < 15; i++){
-         ps2[i].pressure = ps2[i].pressure + p2zeropressure;
-     }
 }
 int16_t get_p2zeropressure(){
     return p2zeropressure;
 }
+*/

@@ -18,6 +18,7 @@
 #include "motor.h"
 #include "process.h"
 #include "settings.h"
+#include "adc.h"
 
 static MOTOR_MOTION motor2 = MOTOR_NOMOTION;
 static MOTOR_MOTION motor1 = MOTOR_NOMOTION;
@@ -161,36 +162,10 @@ void motor2_on(void){
     IO_RB11_SetHigh();
     motor2 = MOTOR_NOMOTION;    
 }
-// motor_Move  +v motor moves down. -v motor moves up
-// should never get a 0;
-void motor_Move(int8_t v){
-    PWM_GENERATOR genNum = PWM_GENERATOR_1;
-    MOTOR_MOTION nmm = MOTOR_DOWNMOTION;
-    int16_t r = v;
-    
-    // extract direction and scale
-    if(v < 0){
-        nmm = MOTOR_UPMOTION;
-        r = ~v;
-        r = r+1;
-    }
-    r = (r*8) + 400;
 
-    if (nmm != motor1) {
-        PWM_OverrideHighEnable(genNum);
-        PWM_OverrideLowEnable(genNum);
-        PWM_DutyCycleSet(genNum, r);
-        if (nmm == MOTOR_DOWNMOTION) {
-            motor1 = MOTOR_DOWNMOTION;
-            PWM_OverrideHighDisable(genNum);
-        } else {
-            motor1 = MOTOR_UPMOTION;
-            PWM_OverrideLowDisable(genNum);
-        }
-    } else
-        PWM_DutyCycleSet(genNum, r);    
-}
-
+/*
+ * 
+ */
 void motor1_Move(uint16_t val, MOTOR_MOTION motion){
     PWM_GENERATOR genNum = PWM_GENERATOR_1;
 
@@ -243,7 +218,7 @@ void probe1_SetStartPos(void){
     motor1_Hold();
 
     __delay_ms(100);
-    setP1ZeroPressure();   
+    set_p1zeropressure();   
     motor1_off();
 }
 
@@ -260,7 +235,7 @@ void probe2_SetStartPos(void){
     motor2_Hold();
 
     __delay_ms(100);
-    setP2ZeroPressure();   
+    set_p2zeropressure();   
     motor2_off();
 }
 

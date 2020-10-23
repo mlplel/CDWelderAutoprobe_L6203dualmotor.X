@@ -5,6 +5,7 @@
  * Created on February 11, 2019, 2:08 PM
  */
 
+#include "adc.h"
 #include "process.h"
 #include "servo.h"
 #include "motor.h"
@@ -12,13 +13,10 @@
 #include <stdlib.h>
 #include "mcc_generated_files/mcc.h"
 
-//const uint16_t SERVOTIME = 70;
-//static int16_t isumMax = 2000;
-//static int16_t isumMin = -2000;
-//static int16_t maxout = 1300;
-
 static uint16_t servo1trigger = 0;
 static uint16_t servo2trigger = 0;
+static bool ps1okf = false;
+static bool ps2okf = false;
 
 static PID_TEMRS pid1;
 static PID_TEMRS pid2;
@@ -30,40 +28,52 @@ static PRESSET ps1 = {0,0,0,0,0,0,false};
 static PRESSET ps2 = {0,0,0,0,0,0,false};
 static SERVO_MODE servomode = SERVO_NONE;
 
+/*
+ * 
+ */
+bool servo_isoutputactive(){
+    if(servomode == SERVO_BOTH){
+        if((ps1okf == true) && (ps2okf == true)){
+            ps1okf = false;
+            ps2okf = false;
+            return true;
+        }
+    } else if(servomode == SERVO_PR){
+        if(ps1okf == true){
+            ps1okf = false;
+            return true;
+        }
+    } else if(servomode == SERVO_PL){
+        if(ps2okf == true){
+            ps2okf = false;
+            return true;
+        }
+    }
+    return false;
+}
 
-void servo_trigger(SERVO_MODE m){
-    
-    if(servomode == SERVO_PR || servomode == SERVO_BOTH){
-        //servo1trigger = SERVOTIME; 
+
+/*
+ *
+ */
+void servo_trigger(){    
+    if((servomode == SERVO_PR) || (servomode == SERVO_BOTH) || (servomode == SERVO_CALPR)){
         servo1trigger = 1;
         pid1.i = 0;
         pid1.d = 0;
         perror1 = 0;
         mm1 = MOTOR_DOWNMOTION;
-        // pressure1setvalue = getP1Pressure();
-        //PIDVALUE p = get_P1pid();
-        //ps1 = getP1();
-        pid1.Kp = ps1.kp;
-        pid1.Ki = ps1.ki;
-        pid1.Kd = ps2.kd;         
-                   
+ 
         motor1_on();
-        motor1_Move(200, MOTOR_DOWNMOTION);
-       
+        motor1_Move(200, MOTOR_DOWNMOTION);       
     }
-    if(servomode == SERVO_PL || servomode == SERVO_BOTH){
+    if((servomode == SERVO_PL) || (servomode == SERVO_BOTH) || (servomode == SERVO_CALPL)){
         servo2trigger = 1;
         pid2.i = 0;
         pid2.d = 0;
         perror2 = 0;
         mm2 = MOTOR_DOWNMOTION;
-        // pressure1setvalue = getP1Pressure();
-        //PIDVALUE p = get_P2pid();
-        //ps2 = getP2();
-        pid2.Kp = ps2.kp;
-        pid2.Ki = ps2.ki;
-        pid2.Kd = ps2.kd;         
-                   
+ 
         motor2_on();
         motor2_Move(200, MOTOR_DOWNMOTION);
     }        
@@ -71,19 +81,27 @@ void servo_trigger(SERVO_MODE m){
 
 void servo1_run(int16_t p){
     static uint16_t itime = 0;
- //   static uint16_t dtime = 0;
+//  static uint16_t dtime = 0;
     static uint16_t otime = 0;
     
     if(servo1trigger == 0)
         return; 
     
-    if(otime != 0){
+    int32_t error = ps1.pressure - p;
+    
+    if((error < 250) && (error > -250)){
+        ps1okf = true;
+    }else {
+        ps1okf = false;
+    } 
+    
+    if(otime != 0){     // pause time for motor reverse direction.
         otime--;
         pid1.i = 0;
         return;
     }
    
-    int32_t error = ps1.pressure - p;
+    
     
     if (itime == 0) {
         pid1.i = error + pid1.i;
@@ -101,16 +119,10 @@ void servo1_run(int16_t p){
         dtime = 3;
     }
     */
-    /*
-    if((error < 130) && (error > -130)){
-        servo1trigger--;
-        if(servo1trigger == 0){
-            motor1_Hold();
-        }
-        return;
-    }    
-    */
-    int32_t output = (error * pid1.Kp) + (pid1.i * pid1.Ki); // + (pid1.d * pid1.Kd);
+    
+   
+    
+    int32_t output = (error * ps1.kp) + (pid1.i * ps1.ki); // + (pid1.d * ps1.kd);
     //int32_t output = (error * pid1.Kp);
     MOTOR_MOTION m = MOTOR_DOWNMOTION;
     output = (output / 512);
@@ -135,8 +147,7 @@ void servo1_run(int16_t p){
     
     motor1_Move(output, m);
     itime--;
-    //dtime--;
-       
+    //dtime--;       
 }
 
 void servo1_stop(void){
@@ -150,15 +161,23 @@ void servo2_run(int16_t p){
     static uint16_t otime = 0;
     
     if(servo2trigger == 0)
-        return;   
+        return;  
     
-    if(otime != 0){
+    int32_t error = ps2.pressure - p;
+    
+    if((error < 200) && (error > -200)){
+        ps2okf = true;
+    }else {
+        ps2okf = false;
+    }
+    
+    if(otime != 0){     // pause time for motor reverse direction.
         otime--;
         pid2.i = 0;
         return;
     }
 
-    int32_t error = ps2.pressure - p;
+    
 
     if (itime == 0) {
         pid2.i = error + pid2.i;
@@ -176,16 +195,9 @@ void servo2_run(int16_t p){
         dtime = 3;
     }
      */
-    /*
-    if((error < 130) && (error > -130)){
-        servo1trigger--;
-        if(servo1trigger == 0){
-            motor1_Hold();
-        }
-        return;
-    }    
-    */
-    int32_t output = (error * pid2.Kp) + (pid2.i * pid2.Ki); // + (pid2.d * pid2.Kd);
+   
+    
+    int32_t output = (error * ps2.kp) + (pid2.i * ps2.ki); // + (pid2.d * ps2.kd);
     //int32_t output = (error * pid2.Kp);
     MOTOR_MOTION m = MOTOR_DOWNMOTION;
     output = (output / 512);
@@ -218,18 +230,16 @@ void servo2_stop(void){
     servo2trigger = 0;
     motor2_Hold();
 }
-
 /*
  *  servo operate mode
  */
 uint16_t servo_setmode(SERVO_MODE m) {
-   
-        servomode = m;
-        return 1;
+    servomode = m;
+    return 1;
 }
 
 /*
- * 
+ *  set probe settings.
  */
 void servo_setprobe(SERVOPROBE p, PRESSET data) {
 
@@ -243,4 +253,48 @@ void servo_setprobe(SERVOPROBE p, PRESSET data) {
         ps2.pressure = get_p2zeropressure() + ps2.pressure;
         return;
     }
+}
+
+/*
+ * 
+ */
+void servo_cal(SERVOPROBE p, CALITEM item, uint16_t value){
+    PRESSET *presset; 
+    int16_t zeropres;
+    if(p == PR){
+       presset = &ps1;  
+       zeropres = get_p1zeropressure();
+    } else {
+       presset = &ps2;
+       zeropres = get_p2zeropressure();
+    }
+    
+    switch(item){
+        case CAL_PRESSURE:
+            presset->pressure = zeropres + value;
+            break;
+        case CAL_ILIMIT:
+            presset->imax = value;
+            break;
+        case CAL_OLIMIT:
+            presset->outlimit = value;
+            break;
+        case CAL_KP:
+            presset->kp = value;
+            break;
+        case CAL_KI:
+            presset->ki = value;
+            break;
+        case CAL_KD:
+            presset->kd = value;
+            break;
+        default:
+            break;
+    }  
+    pid1.d = 0;
+    pid1.i = 0;
+    perror1 = 0;
+    pid2.d = 0;
+    pid2.i = 0;
+    perror2 =0;       
 }

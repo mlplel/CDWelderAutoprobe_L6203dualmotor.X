@@ -17,19 +17,19 @@ extern "C" {
 #endif 
     
     typedef struct {
-        uint16_t    Kp;
-        uint16_t    Ki;
-        uint16_t    Kd;
         uint32_t    i;
         uint32_t    d;
-    }PID_TEMRS;
-    
+    }PID_TEMRS;  
+   
+
     typedef enum {
         SERVO_PR,
         SERVO_PL,
         SERVO_BOTH,
-        SERVO_NONE
-    }SERVO_MODE;
+        SERVO_NONE,
+        SERVO_CALPL,
+        SERVO_CALPR
+    } SERVO_MODE;
     
      typedef struct {
         int16_t pressure;
@@ -41,10 +41,24 @@ extern "C" {
         bool validf;
     }PRESSET;
     
-typedef enum {
+    typedef enum {
         PR = 1,
         PL
     } SERVOPROBE;
+
+     typedef enum {
+        CAL_PRESSURE = 1,
+        CAL_ILIMIT = 2,
+        CAL_OLIMIT = 3,
+        CAL_KP = 4,
+        CAL_KI = 5,
+        CAL_KD = 6,
+        CAL_NONE = 7
+    } CALITEM;
+   
+    
+    
+    
     
  /**
   @Summary
@@ -60,12 +74,99 @@ typedef enum {
   @Example 
     
 */    
-     
-    void servo_trigger(SERVO_MODE m);
+bool servo_isoutputactive(void);    
     
+    
+    
+ /**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/ 
+void servo_trigger(void);
+    
+
+
+/**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/
     void servo1_run(int16_t);
+    
+    
+    
+/**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/    
     void servo1_stop(void);
+    
+    
+    
+    
+    
+/**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/    
     void servo2_run(int16_t);
+    
+    
+    
+    
+/**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/    
     void servo2_stop(void);
     
 /**
@@ -113,8 +214,26 @@ void servo_setprobe(SERVOPROBE p, PRESSET data);
    
   @Example 
     
-*/    
+*/ 
+void servo_cal(SERVOPROBE p, CALITEM item, uint16_t value);
 
+
+
+
+ /**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example 
+    
+*/ 
 
 #ifdef	__cplusplus
 }

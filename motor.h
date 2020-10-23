@@ -40,7 +40,6 @@ extern "C" {
     
     void motor1_on(void); 
     void motor2_on(void);
-    void motor_Move(int8_t);
     void motor1_Move(uint16_t val, MOTOR_MOTION motion);
     void motor2_Move(uint16_t val, MOTOR_MOTION motion);
     

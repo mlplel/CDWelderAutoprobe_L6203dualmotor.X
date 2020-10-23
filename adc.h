@@ -35,6 +35,59 @@ int16_t ADC_GetCH1(void);
 int16_t LPFilterCH0(int16_t input);
 int16_t LPFilterCH1(int16_t input);
 
+    void set_p1zeropressure(void);
+    int16_t get_p1zeropressure(void);
+    void set_p2zeropressure(void);
+    int16_t get_p2zeropressure();
+
+
+/**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example     
+*/
+int16_t adc_peekch1(void);
+
+
+/**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example     
+*/
+int16_t adc_peekch0(void);
+
+
+/**
+  @Summary
+  
+  @Description
+   
+  @Preconditions
+    
+  @Returns
+    
+  @Param
+   
+  @Example     
+*/
+
+
 
 #ifdef	__cplusplus
 }

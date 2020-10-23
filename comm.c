@@ -36,7 +36,7 @@ void spi_init(void){
     SPI2CON1bits.CKE = 1;           // data change on clock active to Idle 
     SPI2CON1bits.MSTEN = 1;         // master mode
     SPI2CON1bits.SPRE = 0;          // 000 = Secondary prescale 8:1
-    SPI2CON1bits.PPRE = 0x2;        // Primary prescale 4:1  
+    SPI2CON1bits.PPRE = 0x1;        // Primary prescale 4:1  
     
     
     
@@ -65,6 +65,7 @@ int16_t send_msg(MAINMSG msg){
     if(status != 0)
         return -1;  //error SPI2 interface is busy.
     
+    SDCS_SetLow();
     SPI2BUF = msg.command;
     SPI2BUF = msg.data1;
     SPI2BUF = msg.data2;
@@ -120,6 +121,7 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _SPI2Interrupt(void){
         if (msglogp == 79) msglogp = 0;
         else msglogp++;
     }
+    SDCS_SetHigh();
     newrxf = true;
 }
 

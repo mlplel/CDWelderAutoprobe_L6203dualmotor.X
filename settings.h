@@ -32,11 +32,14 @@ extern "C" {
     PRESSET getP1(void);
     PRESSET getP2(void);
     
+    /*
     void setP1ZeroPressure(void);
     int16_t get_p1zeropressure(void);
     void setP2ZeroPressure(void);
     int16_t get_p2zeropressure();
-
+*/
+    
+    
 #ifdef	__cplusplus
 }
 #endif

@@ -1,5 +1,9 @@
-
-
+/*
+ * 
+ * 
+ * 
+ * 
+ */
 
 #include "mcc_generated_files/mcc.h"
 #include <xc.h>
@@ -7,9 +11,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
 static ADC_CH ch0;
 static ADC_CH ch1;
+
+static int16_t p1zeropressure;
+static int16_t p2zeropressure;
 
 void ADC_Init(void){        
     // bits 8-9  FORM<1:0> 
@@ -27,8 +33,7 @@ void ADC_Init(void){
     // AD1CON3 = 0x0010;
     AD1CON3bits.ADCS = 0x10;    // Tad = TP ? 17
     
-    AD1CON4 = 0x0000;
-    
+    AD1CON4 = 0x0000;    
     //AD1CHS0 = 0x0101;
     AD1CHS0bits.CH0SB = 0x1;    // Channel 0 positive input is AN1
     AD1CHS0bits.CH0SA = 0x1;    // Channel 0 positive input is AN1
@@ -36,21 +41,18 @@ void ADC_Init(void){
     AD1CHS123 = 0x0000;         // Channel 1 AN0
     
     AD1CSSH = 0x0000;           // no scan    
-    AD1CSSL = 0x0000;           // no scan  
-    
+    AD1CSSL = 0x0000;           // no scan      
 }
 
 void ADC_On(void){
      // clear interrupt flag
     IFS0bits.AD1IF  = 0;
     // enable adc interrupt
-    IEC0bits.AD1IE = 1;
-    
+    IEC0bits.AD1IE = 1;    
     AD1CON1bits.ADON = 1;
 }
 void ADC_Off(void){
-    AD1CON1bits.ADON = 0;
-    
+    AD1CON1bits.ADON = 0;    
     // disable adc interrupt
     IEC0bits.AD1IE = 0;
 }
@@ -77,7 +79,6 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _AD1Interrupt(void){
 }
 
 
-
 bool ADC_IsCH0Valid(void){
     return ch0.validf;
 }
@@ -94,8 +95,11 @@ int16_t ADC_GetCH1(void){
     ch1.validf = false;
     return ch1.value;    
 }
-const unsigned int FILTERSIZE = 4;
 
+const unsigned int FILTERSIZE = 4;
+/*
+ * 
+ */
 int16_t LPFilterCH0(int16_t input){
     static int16_t data[8]= {0, 0, 0, 0, 0, 0, 0, 0};
     static int index = 0;
@@ -109,6 +113,9 @@ int16_t LPFilterCH0(int16_t input){
     
 }
 
+/*
+ * 
+ */
 int16_t LPFilterCH1(int16_t input){
     static int16_t data[8]= {0, 0, 0, 0, 0, 0, 0, 0};
     static int index = 0;
@@ -120,4 +127,36 @@ int16_t LPFilterCH1(int16_t input){
     
     return (value / FILTERSIZE);
     
+}
+
+/*
+ * 
+ */
+int16_t adc_peekch0(){
+    return ch0.value;
+}
+/*
+ * 
+ */
+int16_t adc_peekch1(){
+    return ch1.value;
+}
+
+
+void set_p1zeropressure(){
+     //while(ADC_IsCH1Valid() == false);
+     //p1zeropressure = ADC_GetCH1();
+    p1zeropressure = ch1.value;
+}
+int16_t get_p1zeropressure(){
+    return p1zeropressure;
+}
+
+void set_p2zeropressure(){
+     //while(ADC_IsCH0Valid() == false);
+    //p2zeropressure = ADC_GetCH0();
+    p2zeropressure = ch0.value;
+}
+int16_t get_p2zeropressure(){
+    return p2zeropressure;
 }

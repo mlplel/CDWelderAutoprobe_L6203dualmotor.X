@@ -55,6 +55,11 @@ extern "C" {
         CAL_KD = 6,
         CAL_NONE = 7
     } CALITEM;
+    
+    typedef struct {
+        bool p1f;
+        bool p2f;
+    }PRESSUREOKF;
    
     
     
@@ -231,9 +236,9 @@ void servo_cal(SERVOPROBE p, CALITEM item, uint16_t value);
     
   @Param
    
-  @Example 
-    
+  @Example    
 */ 
+PRESSUREOKF servo_checkprobpressure(void);
 
 #ifdef	__cplusplus
 }

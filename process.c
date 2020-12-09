@@ -71,20 +71,40 @@ void loop100us(void){
  */
 void loop1ms(void){  
     static uint16_t outputactivetime = 0;
+    static bool outputactivef = false;
     proc_actionswitch();
     processmsg();    
     process_switchevent(get_actionswitch());
     
+    /*
     if(outputactivetime != 0){
         outputactivetime--;
         if(outputactivetime == 0){
             TRIG_SetHigh();
             set_actionswitch(PRESSED);
         }
+    }  
+     */ 
+    
+    if(outputactivef == true){
+        outputactivetime++;
+        if(outputactivetime == 3){
+            outputactivetime--;
+            TRIG_SetHigh();
+            Nop();
+            if(TRIG_GetValue() == 1){
+                outputactivetime++;
+            }            
+        }
+        if(outputactivetime >= 8){
+            outputactivef = false;
+            set_actionswitch(PRESSED);
+        }        
     }    
     if(servo_isoutputactive()){
         TRIG_SetLow();
-        outputactivetime = 100;
+        outputactivetime = 0;
+        outputactivef = true;
         servo1_stop();
         servo2_stop();
     }
@@ -213,13 +233,19 @@ void processmsg(){
             statusmsg.data3 = 0x55;
             break;
     }
+    PRESSUREOKF pres = servo_checkprobpressure();
+    uint16_t pressurestat = 0;
+    if(pres.p1f == true)
+        pressurestat = pressurestat | 0x0001;
+    if(pres.p2f == true)
+        pressurestat = pressurestat | 0x0002;
+    lastmsg.data3 = pressurestat;                
     send_msg(lastmsg);
     
     // testing
     statusmsg.data1 = adcvaluech0;
     statusmsg.data2 = adcvaluech1;
-    //statusmsg.data1 = pl.pressure;
-    //statusmsg.data2 = pr.pressure;
+
 }
 
 

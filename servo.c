@@ -52,6 +52,16 @@ bool servo_isoutputactive(){
     return false;
 }
 
+/*
+ * 
+ */
+PRESSUREOKF servo_checkprobpressure(){
+    PRESSUREOKF p;
+    p.p1f = ps1okf;
+    p.p2f = ps2okf;
+    return p;
+}
+
 
 /*
  *
@@ -165,7 +175,7 @@ void servo2_run(int16_t p){
     
     int32_t error = ps2.pressure - p;
     
-    if((error < 200) && (error > -200)){
+    if((error < 250) && (error > -250)){
         ps2okf = true;
     }else {
         ps2okf = false;

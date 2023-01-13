@@ -230,7 +230,7 @@ void processmsg(){
             servo_setmode(SERVO_NONE);
             break;            
         default:
-            statusmsg.data3 = 0x55;
+            //statusmsg.data3 = 0x55;
             break;
     }
     PRESSUREOKF pres = servo_checkprobpressure();
@@ -239,7 +239,8 @@ void processmsg(){
         pressurestat = pressurestat | 0x0001;
     if(pres.p2f == true)
         pressurestat = pressurestat | 0x0002;
-    lastmsg.data3 = pressurestat;                
+    lastmsg.data3 = pressurestat; 
+    //lastmsg.data3 = 0xffff;
     send_msg(lastmsg);
     
     // testing
